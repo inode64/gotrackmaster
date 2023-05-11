@@ -1,9 +1,5 @@
 linters:
   enable:
-    - lll
-
-linters:
-  enable:
   - asasalint
   - asciicheck
   - bidichk

@@ -2,17 +2,9 @@ package trackmaster
 
 import (
 	"math"
+
+	gpx "github.com/twpayne/go-gpx"
 )
-
-// Distance2D returns the 2D distance of two WptType.
-func (w *WptType) Distance2D(pt WptType) float64 {
-	return distance(w.Lat, w.Lon, 0, pt.Lat, pt.Lon, 0, false, false)
-}
-
-// Distance3D returns the 3D distance of two WptType.
-func (w *WptType) Distance3D(pt WptType) float64 {
-	return distance(w.Lat, w.Lon, w.Ele, pt.Lat, pt.Lon, pt.Ele, true, false)
-}
 
 // toRadians converts to radial coordinates.
 func toRadians(x float64) float64 {
@@ -23,7 +15,7 @@ func toDegrees(rad float64) float64 {
 	return rad * 180 / math.Pi
 }
 
-func geoToCartesian(coord WptType) (float64, float64, float64) {
+func geoToCartesian(coord gpx.WptType) (float64, float64, float64) {
 	latRad := toRadians(coord.Lat)
 	lonRad := toRadians(coord.Lon)
 
@@ -36,7 +28,7 @@ func geoToCartesian(coord WptType) (float64, float64, float64) {
 	return x, y, z
 }
 
-func cartesianToGeo(x, y, z float64) WptType {
+func cartesianToGeo(x, y, z float64) gpx.WptType {
 	r := math.Sqrt(x*x + y*y + z*z)
 	latRad := math.Asin(z / r)
 	lonRad := math.Atan2(y, x)
@@ -45,5 +37,16 @@ func cartesianToGeo(x, y, z float64) WptType {
 	lon := toDegrees(lonRad)
 	alt := r - earthRadius
 
-	return WptType{Lat: lat, Lon: lon, Ele: alt}
+	return gpx.WptType{Lat: lat, Lon: lon, Ele: alt}
+}
+
+func midpoint(coord1, coord2 gpx.WptType) gpx.WptType {
+	x1, y1, z1 := geoToCartesian(coord1)
+	x2, y2, z2 := geoToCartesian(coord2)
+
+	xMid := (x1 + x2) / 2
+	yMid := (y1 + y2) / 2
+	zMid := (z1 + z2) / 2
+
+	return cartesianToGeo(xMid, yMid, zMid)
 }
