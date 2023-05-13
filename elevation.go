@@ -6,6 +6,29 @@ import (
 	gpx "github.com/twpayne/go-gpx"
 )
 
+// LostElevation finds the lost elevation
+func LostElevation(g gpx.GPX, fix bool) []gpx.WptType {
+	var result []gpx.WptType
+	for _, TrkType := range g.Trk {
+		for _, TrkSegType := range TrkType.TrkSeg {
+			for wptTypeNo, WptType := range TrkSegType.TrkPt {
+				if wptTypeNo != len(TrkSegType.TrkPt)-1 {
+					if WptType.Ele == 0 {
+					    closest := findNextVerticalPoint(*TrkSegType, wptTypeNo, 10)
+			    		if closest == -1 {
+                            continue
+                		}
+					    TrkSegType.TrkPt[wptTypeNo].Ele = TrkSegType.TrkPt[closest].Ele
+                        result = append(result, *TrkSegType.TrkPt[wptTypeNo])
+					}
+				}
+			}
+		}
+	}
+	return result
+}
+
+
 // MaxSpeedVertical finds the maximum vertical speed between two points.
 func MaxSpeedVertical(g gpx.GPX, max float64, fix bool) []gpx.WptType {
 	var result []gpx.WptType
@@ -16,9 +39,6 @@ func MaxSpeedVertical(g gpx.GPX, max float64, fix bool) []gpx.WptType {
 					speed := SpeedVerticalBetween(*WptType, *TrkSegType.TrkPt[wptTypeNo+1])
 					if speed > max {
 						maxSpeedVerticalFix(*TrkSegType, wptTypeNo, fix)
-						speed := SpeedVerticalBetween(*WptType, *TrkSegType.TrkPt[wptTypeNo+1])
-
-						TrkSegType.TrkPt[wptTypeNo].Speed = speed
 						result = append(result, *TrkSegType.TrkPt[wptTypeNo])
 					}
 				}
@@ -49,24 +69,56 @@ func maxSpeedVerticalFix(ts gpx.TrkSegType, wptTypeNo int, fix bool) {
 }
 
 // findClosestVerticalPoint finds the closest vertical point to the start point.
-func findClosestVerticalPoint(ts gpx.TrkSegType, start, num int) int {
+func findClosestVerticalPoint(ts gpx.TrkSegType, start, max int) int {
 	var minElevation float64
 	var minElevationIndex int
+	var num int
+	// find next closest point
 	for i := start + 1; i < len(ts.TrkPt); i++ {
-		num--
-		if num == 0 {
+		num++
+		if num > max {
 			break
 		}
+		if ts.TrkPt[i].Ele == 0 {
+            continue
+        }
 		elevation := ElevationAbs(*ts.TrkPt[start], *ts.TrkPt[i])
 		if elevation < minElevation || minElevation == 0 {
 			minElevation = elevation
 			minElevationIndex = i
 		}
 	}
+
 	return minElevationIndex
 }
 
-// ElevationAbs finds the absolute elevation between two points.
+func findNextVerticalPoint(ts gpx.TrkSegType, start, max int) int {
+	var num int
+	// find next vertical point
+	for i := start + 1; i < len(ts.TrkPt); i++ {
+		num++
+		if num > max {
+			break
+		}
+		if ts.TrkPt[i].Ele != 0 {
+            return i
+        }
+	}
+	// find previous vertical point
+	num = 0
+	for i := start - 1; i > 0; i-- {
+		num++
+		if num > max {
+			break
+		}
+		if ts.TrkPt[i].Ele != 0 {
+            return i
+        }
+	}
+	return -1
+}
+
+// Return the elevation of the midpoint between two points
 func ElevationAbs(w, pt gpx.WptType) float64 {
-	return math.Abs(w.Ele - pt.Ele)
+	return w.Ele + math.Abs(w.Ele - pt.Ele) / 2
 }
