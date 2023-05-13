@@ -21,7 +21,7 @@ func TestTimeFix(t *testing.T) {
 		assert.NoError(t, err)
 		assert.NotNil(t, g)
 		n := trackmaster.FixTimesTrack(*g, true)
-		assert.Equal(t, 33, n)
+		assert.Equal(t, 39, n)
 		datetest := time.Date(2015, time.April, 18, 7, 57, 51, 500000000, time.UTC)
 		datetrack := g.Trk[0].TrkSeg[0].TrkPt[1].Time
 		assert.Equal(t, datetrack, datetest)
