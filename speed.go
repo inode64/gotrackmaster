@@ -4,9 +4,9 @@ import (
 	gpx "github.com/twpayne/go-gpx"
 )
 
+// MaxSpeed finds the max speed in a GPX file.
 func MaxSpeed(g gpx.GPX, max float64, fix bool) []gpx.WptType {
 	var result []gpx.WptType
-
 	for _, TrkType := range g.Trk {
 		for _, TrkSegType := range TrkType.TrkSeg {
 			for wptTypeNo, WptType := range TrkSegType.TrkPt {
@@ -23,7 +23,6 @@ func MaxSpeed(g gpx.GPX, max float64, fix bool) []gpx.WptType {
 			}
 		}
 	}
-
 	return result
 }
 
@@ -39,6 +38,7 @@ func SpeedBetween(w, pt gpx.WptType, threeD bool) float64 {
 	return distLen / seconds
 }
 
+// maxSpeedFix fixes the max speed by adding a point in the middle of the two points.
 func maxSpeedFix(ts gpx.TrkSegType, wptTypeNo int, fix bool) {
 	if fix {
 		closest := findClosestPoint(ts, wptTypeNo, 5)
@@ -52,6 +52,7 @@ func maxSpeedFix(ts gpx.TrkSegType, wptTypeNo int, fix bool) {
 	}
 }
 
+// findClosestPoint finds the closest point to a given point.
 func findClosestPoint(ts gpx.TrkSegType, start, num int) int {
 	var minDistance float64
 	var minDistanceIndex int

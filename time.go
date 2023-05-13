@@ -27,12 +27,10 @@ func FixTimesSegment(tr gpx.TrkSegType) gpx.TrkSegType {
 	if len(tr.TrkPt) == 0 {
 		return tr
 	}
-
 	// Check first element
 	if !tr.TrkPt[0].Time.IsZero() && tr.TrkPt[0].Time.After(tr.TrkPt[1].Time) {
 		tr.TrkPt[0].Time = tr.TrkPt[1].Time.Add(-10 * time.Second)
 	}
-
 	// Check all intermediate elements
 	lastValidTime := tr.TrkPt[0].Time
 	totalDiff := time.Duration(0)
@@ -48,12 +46,10 @@ func FixTimesSegment(tr gpx.TrkSegType) gpx.TrkSegType {
 			lastValidTime = tr.TrkPt[i].Time
 		}
 	}
-
 	// Check last element
 	if tr.TrkPt[len(tr.TrkPt)-1].Time.Before(lastValidTime) {
 		tr.TrkPt[len(tr.TrkPt)-1].Time = lastValidTime.Add(totalDiff / time.Duration(len(tr.TrkPt)-1))
 	}
-
 	return tr
 }
 
