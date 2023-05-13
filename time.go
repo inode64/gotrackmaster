@@ -23,13 +23,15 @@ func TimeDiff(w, pt gpx.WptType) float64 {
 }
 
 // FixTimesSegment fixes the time of a track segment.
-func FixTimesSegment(tr gpx.TrkSegType) gpx.TrkSegType {
+func FixTimesSegment(tr gpx.TrkSegType) (gpx.TrkSegType, int) {
+	var num int
 	if len(tr.TrkPt) == 0 {
-		return tr
+		return tr, num
 	}
 	// Check first element
 	if !tr.TrkPt[0].Time.IsZero() && tr.TrkPt[0].Time.After(tr.TrkPt[1].Time) {
 		tr.TrkPt[0].Time = tr.TrkPt[1].Time.Add(-10 * time.Second)
+		num++
 	}
 	// Check all intermediate elements
 	lastValidTime := tr.TrkPt[0].Time
@@ -41,6 +43,7 @@ func FixTimesSegment(tr gpx.TrkSegType) gpx.TrkSegType {
 		if tr.TrkPt[i].Time.After(tr.TrkPt[i+1].Time) || tr.TrkPt[i].Time.Before(lastValidTime) {
 			averageDiff := totalDiff / time.Duration(i)
 			tr.TrkPt[i].Time = lastValidTime.Add(averageDiff)
+			num++
 		} else {
 			totalDiff += tr.TrkPt[i].Time.Sub(lastValidTime)
 			lastValidTime = tr.TrkPt[i].Time
@@ -50,14 +53,21 @@ func FixTimesSegment(tr gpx.TrkSegType) gpx.TrkSegType {
 	if tr.TrkPt[len(tr.TrkPt)-1].Time.Before(lastValidTime) {
 		tr.TrkPt[len(tr.TrkPt)-1].Time = lastValidTime.Add(totalDiff / time.Duration(len(tr.TrkPt)-1))
 	}
-	return tr
+	return tr, num
 }
 
 // FixTimesTrack fixes the time of a track.
-func FixTimesTrack(g gpx.GPX) {
+func FixTimesTrack(g gpx.GPX, fix bool) int {
+	var num, n int
 	for TrkTypeNo, TrkType := range g.Trk {
 		for TrkSegTypeNo, TrkSegType := range TrkType.TrkSeg {
-			*g.Trk[TrkTypeNo].TrkSeg[TrkSegTypeNo] = FixTimesSegment(*TrkSegType)
+			if fix {
+				*g.Trk[TrkTypeNo].TrkSeg[TrkSegTypeNo], n = FixTimesSegment(*TrkSegType)
+			} else {
+				_, n = FixTimesSegment(*TrkSegType)
+			}
+			num += n
 		}
 	}
+	return num
 }
