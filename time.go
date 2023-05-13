@@ -25,8 +25,15 @@ func TimeDiff(w, pt gpx.WptType) float64 {
 // FixTimesSegment fixes the time of a track segment.
 func FixTimesSegment(tr gpx.TrkSegType) (gpx.TrkSegType, int) {
 	var num int
+	var lastValidTime time.Time
 	if len(tr.TrkPt) == 0 {
 		return tr, num
+	}
+	// Find the first valid time
+	for _, WptType := range tr.TrkPt {
+		if lastValidTime.IsZero() || WptType.Time.Before(lastValidTime) {
+			lastValidTime = WptType.Time
+		}
 	}
 	// Check first element
 	if !tr.TrkPt[0].Time.IsZero() && tr.TrkPt[0].Time.After(tr.TrkPt[1].Time) {
@@ -34,26 +41,36 @@ func FixTimesSegment(tr gpx.TrkSegType) (gpx.TrkSegType, int) {
 		num++
 	}
 	// Check all intermediate elements
-	lastValidTime := tr.TrkPt[0].Time
-	totalDiff := time.Duration(0)
+	lastValidTime = tr.TrkPt[0].Time
 	for i := 1; i < len(tr.TrkPt)-1; i++ {
 		if tr.TrkPt[i].Time.IsZero() {
 			continue
 		}
-		if tr.TrkPt[i].Time.After(tr.TrkPt[i+1].Time) || tr.TrkPt[i].Time.Before(lastValidTime) {
-			averageDiff := totalDiff / time.Duration(i)
-			tr.TrkPt[i].Time = lastValidTime.Add(averageDiff)
+		maxValidTime := lastValidTime.Add(time.Hour)
+		if tr.TrkPt[i].Time.After(tr.TrkPt[i+1].Time) || tr.TrkPt[i].Time.After(maxValidTime) {
+			tr.TrkPt[i].Time = findNextValidTime(tr, lastValidTime, i)
 			num++
 		} else {
-			totalDiff += tr.TrkPt[i].Time.Sub(lastValidTime)
 			lastValidTime = tr.TrkPt[i].Time
 		}
 	}
-	// Check last element
-	if tr.TrkPt[len(tr.TrkPt)-1].Time.Before(lastValidTime) {
-		tr.TrkPt[len(tr.TrkPt)-1].Time = lastValidTime.Add(totalDiff / time.Duration(len(tr.TrkPt)-1))
-	}
 	return tr, num
+}
+
+func findNextValidTime(tr gpx.TrkSegType, lastValidTime time.Time, start int) time.Time {
+	maxValidTime := lastValidTime.Add(time.Hour)
+
+	for i := start + 1; i < len(tr.TrkPt); i++ {
+		if tr.TrkPt[i].Time.IsZero() {
+			continue
+		}
+		if tr.TrkPt[i].Time.After(lastValidTime) && tr.TrkPt[i].Time.Before(maxValidTime) {
+			return lastValidTime.Add(tr.TrkPt[i].Time.Sub(lastValidTime) / time.Duration(i-start+1))
+		}
+	}
+
+	// check when there is no valid time
+	return tr.TrkPt[0].Time
 }
 
 // FixTimesTrack fixes the time of a track.

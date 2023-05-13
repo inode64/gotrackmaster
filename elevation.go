@@ -6,7 +6,7 @@ import (
 	gpx "github.com/twpayne/go-gpx"
 )
 
-// MaxSpeedVertical finds the maximum vertical speed between two points
+// MaxSpeedVertical finds the maximum vertical speed between two points.
 func MaxSpeedVertical(g gpx.GPX, max float64, fix bool) []gpx.WptType {
 	var result []gpx.WptType
 	for _, TrkType := range g.Trk {
@@ -28,13 +28,13 @@ func MaxSpeedVertical(g gpx.GPX, max float64, fix bool) []gpx.WptType {
 	return result
 }
 
-// SpeedVerticalBetween finds the vertical speed between two points
+// SpeedVerticalBetween finds the vertical speed between two points.
 func SpeedVerticalBetween(w, pt gpx.WptType) float64 {
 	seconds := TimeDiff(w, pt)
 	return ElevationAbs(w, pt) / seconds
 }
 
-// maxSpeedVerticalFix finds the maximum vertical speed between two points
+// maxSpeedVerticalFix finds the maximum vertical speed between two points.
 func maxSpeedVerticalFix(ts gpx.TrkSegType, wptTypeNo int, fix bool) {
 	if fix {
 		closest := findClosestVerticalPoint(ts, wptTypeNo, 5)
@@ -48,7 +48,7 @@ func maxSpeedVerticalFix(ts gpx.TrkSegType, wptTypeNo int, fix bool) {
 	}
 }
 
-// findClosestVerticalPoint finds the closest vertical point to the start point
+// findClosestVerticalPoint finds the closest vertical point to the start point.
 func findClosestVerticalPoint(ts gpx.TrkSegType, start, num int) int {
 	var minElevation float64
 	var minElevationIndex int
@@ -66,7 +66,7 @@ func findClosestVerticalPoint(ts gpx.TrkSegType, start, num int) int {
 	return minElevationIndex
 }
 
-// ElevationAbs finds the absolute elevation between two points
+// ElevationAbs finds the absolute elevation between two points.
 func ElevationAbs(w, pt gpx.WptType) float64 {
 	return math.Abs(w.Ele - pt.Ele)
 }
