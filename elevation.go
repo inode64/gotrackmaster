@@ -2,7 +2,9 @@ package trackmaster
 
 import (
 	"math"
+	"net/http"
 
+	"github.com/tkrajina/go-elevations/geoelevations"
 	gpx "github.com/twpayne/go-gpx"
 )
 
@@ -17,9 +19,6 @@ func LostElevation(g gpx.GPX, fix bool) []GPXElementInfo {
 					if closest == -1 {
 						continue
 					}
-					if fix {
-						TrkSegType.TrkPt[wptTypeNo].Ele = TrkSegType.TrkPt[closest].Ele
-					}
 					point := GPXElementInfo{}
 					point.WptType = *TrkSegType.TrkPt[wptTypeNo]
 					point.WptTypeNo = wptTypeNo
@@ -28,6 +27,10 @@ func LostElevation(g gpx.GPX, fix bool) []GPXElementInfo {
 					point.Elevation = TrkSegType.TrkPt[closest].Ele
 
 					result = append(result, point)
+
+					if fix {
+						TrkSegType.TrkPt[wptTypeNo].Ele = TrkSegType.TrkPt[closest].Ele
+					}
 				}
 			}
 		}
@@ -44,15 +47,15 @@ func MaxSpeedVertical(g gpx.GPX, max float64, fix bool) []GPXElementInfo {
 				if wptTypeNo != len(TrkSegType.TrkPt)-1 {
 					point := SpeedVerticalBetween(*WptType, *TrkSegType.TrkPt[wptTypeNo+1])
 					if point.Speed > max {
-						if fix {
-							gaussianFilter(*TrkSegType, wptTypeNo, wptTypeNo+6, 3, 1.5)
-						}
 						point.WptType = *TrkSegType.TrkPt[wptTypeNo]
 						point.WptTypeNo = wptTypeNo
 						point.TrkSegTypeNo = TrkSegTypeNo
 						point.TrkTypeNo = TrkTypeNo
-
 						result = append(result, point)
+
+						if fix {
+							gaussianFilter(*TrkSegType, wptTypeNo-2, wptTypeNo+5, 3, 1.5)
+						}
 					}
 				}
 			}
@@ -143,4 +146,42 @@ func ElevationAbs(w, pt gpx.WptType) float64 {
 
 func MiddleElevation(w, pt gpx.WptType) float64 {
 	return pt.Ele + (w.Ele-pt.Ele)/2
+}
+
+func ElevationSRTM(g gpx.GPX, max float64, fix bool) []GPXElementInfo {
+	var result []GPXElementInfo
+	srtm, err := geoelevations.NewSrtm(http.DefaultClient)
+	if err != nil {
+		return result
+	}
+
+	for TrkTypeNo, TrkType := range g.Trk {
+		for TrkSegTypeNo, TrkSegType := range TrkType.TrkSeg {
+			for wptTypeNo, WptType := range TrkSegType.TrkPt {
+				elevation, err := srtm.GetElevation(http.DefaultClient, WptType.Lat, WptType.Lon)
+				if err != nil || elevation == 0 {
+					continue
+				}
+				e := math.Abs(WptType.Ele - elevation)
+				p := e * 100 / WptType.Ele
+				// fix only when the elevation is more than 10m different and the percentage is more than max
+				// because the STRM elevation is not very accurate, STRM1 30 meters, STRM3 90 meters
+				if p > max && e > 10 {
+					point := GPXElementInfo{}
+					point.WptType = *TrkSegType.TrkPt[wptTypeNo]
+					point.WptTypeNo = wptTypeNo
+					point.TrkSegTypeNo = TrkSegTypeNo
+					point.TrkTypeNo = TrkTypeNo
+					point.Elevation = elevation
+
+					result = append(result, point)
+
+					if fix {
+						TrkSegType.TrkPt[wptTypeNo].Ele = elevation
+					}
+				}
+			}
+		}
+	}
+	return result
 }

@@ -4,6 +4,7 @@ go 1.20
 
 require (
 	github.com/stretchr/testify v1.8.1
+	github.com/tkrajina/go-elevations v0.1.0
 	github.com/twpayne/go-gpx v1.3.0
 )
 
