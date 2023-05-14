@@ -5,19 +5,22 @@ import (
 )
 
 // MaxSpeed finds the max speed in a GPX file.
-func MaxSpeed(g gpx.GPX, max float64, fix bool) []gpx.WptType {
-	var result []gpx.WptType
-	for _, TrkType := range g.Trk {
-		for _, TrkSegType := range TrkType.TrkSeg {
+func MaxSpeed(g gpx.GPX, max float64, fix bool) []GPXElementInfo {
+	var result []GPXElementInfo
+	for TrkTypeNo, TrkType := range g.Trk {
+		for TrkSegTypeNo, TrkSegType := range TrkType.TrkSeg {
 			for wptTypeNo, WptType := range TrkSegType.TrkPt {
 				if wptTypeNo != len(TrkSegType.TrkPt)-1 {
-					speed := SpeedBetween(*WptType, *TrkSegType.TrkPt[wptTypeNo+1], false)
-					if speed > max {
+					point := SpeedBetween(*WptType, *TrkSegType.TrkPt[wptTypeNo+1], false)
+					if point.Speed > max {
 						maxSpeedFix(*TrkSegType, wptTypeNo, fix)
-						speed := SpeedBetween(*WptType, *TrkSegType.TrkPt[wptTypeNo+1], false)
+						point = SpeedBetween(*WptType, *TrkSegType.TrkPt[wptTypeNo+1], false)
+						point.WptType = *TrkSegType.TrkPt[wptTypeNo]
+						point.wptTypeNo = wptTypeNo
+						point.TrkSegTypeNo = TrkSegTypeNo
+						point.TrkTypeNo = TrkTypeNo
 
-						TrkSegType.TrkPt[wptTypeNo].Speed = speed
-						result = append(result, *TrkSegType.TrkPt[wptTypeNo])
+						result = append(result, point)
 					}
 				}
 			}
@@ -27,7 +30,7 @@ func MaxSpeed(g gpx.GPX, max float64, fix bool) []gpx.WptType {
 }
 
 // SpeedBetween calculates the speed between two WptType.
-func SpeedBetween(w, pt gpx.WptType, threeD bool) float64 {
+func SpeedBetween(w, pt gpx.WptType, threeD bool) GPXElementInfo {
 	seconds := TimeDiff(w, pt)
 	var distLen float64
 	if threeD {
@@ -35,7 +38,13 @@ func SpeedBetween(w, pt gpx.WptType, threeD bool) float64 {
 	} else {
 		distLen = Distance2D(w, pt)
 	}
-	return distLen / seconds
+	speed := distLen / seconds
+
+	return GPXElementInfo{
+		Speed:    speed,
+		Length:   distLen,
+		Duration: seconds,
+	}
 }
 
 // maxSpeedFix fixes the max speed by adding a point in the middle of the two points.

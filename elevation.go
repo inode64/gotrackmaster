@@ -7,10 +7,10 @@ import (
 )
 
 // LostElevation finds the lost elevation
-func LostElevation(g gpx.GPX, fix bool) []gpx.WptType {
-	var result []gpx.WptType
-	for _, TrkType := range g.Trk {
-		for _, TrkSegType := range TrkType.TrkSeg {
+func LostElevation(g gpx.GPX, fix bool) []GPXElementInfo {
+	var result []GPXElementInfo
+	for TrkTypeNo, TrkType := range g.Trk {
+		for TrkSegTypeNo, TrkSegType := range TrkType.TrkSeg {
 			for wptTypeNo, WptType := range TrkSegType.TrkPt {
 				if wptTypeNo != len(TrkSegType.TrkPt)-1 {
 					if WptType.Ele == 0 {
@@ -18,8 +18,17 @@ func LostElevation(g gpx.GPX, fix bool) []gpx.WptType {
 						if closest == -1 {
 							continue
 						}
-						TrkSegType.TrkPt[wptTypeNo].Ele = TrkSegType.TrkPt[closest].Ele
-						result = append(result, *TrkSegType.TrkPt[wptTypeNo])
+						if fix {
+							TrkSegType.TrkPt[wptTypeNo].Ele = TrkSegType.TrkPt[closest].Ele
+						}
+						point := GPXElementInfo{}
+						point.WptType = *TrkSegType.TrkPt[wptTypeNo]
+						point.wptTypeNo = wptTypeNo
+						point.TrkSegTypeNo = TrkSegTypeNo
+						point.TrkTypeNo = TrkTypeNo
+						point.Elevation = TrkSegType.TrkPt[closest].Ele
+
+						result = append(result, point)
 					}
 				}
 			}
@@ -29,16 +38,21 @@ func LostElevation(g gpx.GPX, fix bool) []gpx.WptType {
 }
 
 // MaxSpeedVertical finds the maximum vertical speed between two points.
-func MaxSpeedVertical(g gpx.GPX, max float64, fix bool) []gpx.WptType {
-	var result []gpx.WptType
-	for _, TrkType := range g.Trk {
-		for _, TrkSegType := range TrkType.TrkSeg {
+func MaxSpeedVertical(g gpx.GPX, max float64, fix bool) []GPXElementInfo {
+	var result []GPXElementInfo
+	for TrkTypeNo, TrkType := range g.Trk {
+		for TrkSegTypeNo, TrkSegType := range TrkType.TrkSeg {
 			for wptTypeNo, WptType := range TrkSegType.TrkPt {
 				if wptTypeNo != len(TrkSegType.TrkPt)-1 {
-					speed := SpeedVerticalBetween(*WptType, *TrkSegType.TrkPt[wptTypeNo+1])
-					if speed > max {
+					point := SpeedVerticalBetween(*WptType, *TrkSegType.TrkPt[wptTypeNo+1])
+					if point.Speed > max {
 						maxSpeedVerticalFix(*TrkSegType, wptTypeNo, fix)
-						result = append(result, *TrkSegType.TrkPt[wptTypeNo])
+						point.WptType = *TrkSegType.TrkPt[wptTypeNo]
+						point.wptTypeNo = wptTypeNo
+						point.TrkSegTypeNo = TrkSegTypeNo
+						point.TrkTypeNo = TrkTypeNo
+
+						result = append(result, point)
 					}
 				}
 			}
@@ -48,9 +62,16 @@ func MaxSpeedVertical(g gpx.GPX, max float64, fix bool) []gpx.WptType {
 }
 
 // SpeedVerticalBetween finds the vertical speed between two points.
-func SpeedVerticalBetween(w, pt gpx.WptType) float64 {
+func SpeedVerticalBetween(w, pt gpx.WptType) GPXElementInfo {
 	seconds := TimeDiff(w, pt)
-	return ElevationAbs(w, pt) / seconds
+	elevation := ElevationAbs(w, pt)
+	speed := elevation / seconds
+
+	return GPXElementInfo{
+		Speed:    speed,
+		Length:   elevation,
+		Duration: seconds,
+	}
 }
 
 // maxSpeedVerticalFix finds the maximum vertical speed between two points.
