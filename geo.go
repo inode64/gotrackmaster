@@ -75,6 +75,6 @@ func gaussianFilter(elevations gpx.TrkSegType, start, end, windowSize int, sigma
 	}
 }
 
-func gaussian(x float64, sigma float64) float64 {
+func gaussian(x, sigma float64) float64 {
 	return (1.0 / (math.Sqrt(2*math.Pi) * sigma)) * math.Exp(-math.Pow(x, 2.0)/(2*math.Pow(sigma, 2.0)))
 }
