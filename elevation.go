@@ -14,12 +14,12 @@ func LostElevation(g gpx.GPX, fix bool) []gpx.WptType {
 			for wptTypeNo, WptType := range TrkSegType.TrkPt {
 				if wptTypeNo != len(TrkSegType.TrkPt)-1 {
 					if WptType.Ele == 0 {
-					    closest := findNextVerticalPoint(*TrkSegType, wptTypeNo, 10)
-			    		if closest == -1 {
-                            continue
-                		}
-					    TrkSegType.TrkPt[wptTypeNo].Ele = TrkSegType.TrkPt[closest].Ele
-                        result = append(result, *TrkSegType.TrkPt[wptTypeNo])
+						closest := findNextVerticalPoint(*TrkSegType, wptTypeNo, 10)
+						if closest == -1 {
+							continue
+						}
+						TrkSegType.TrkPt[wptTypeNo].Ele = TrkSegType.TrkPt[closest].Ele
+						result = append(result, *TrkSegType.TrkPt[wptTypeNo])
 					}
 				}
 			}
@@ -27,7 +27,6 @@ func LostElevation(g gpx.GPX, fix bool) []gpx.WptType {
 	}
 	return result
 }
-
 
 // MaxSpeedVertical finds the maximum vertical speed between two points.
 func MaxSpeedVertical(g gpx.GPX, max float64, fix bool) []gpx.WptType {
@@ -61,10 +60,7 @@ func maxSpeedVerticalFix(ts gpx.TrkSegType, wptTypeNo int, fix bool) {
 		if closest == 0 {
 			return
 		}
-		mid := midpoint(*ts.TrkPt[wptTypeNo], *ts.TrkPt[closest])
-		ts.TrkPt[wptTypeNo+1].Lat = mid.Lat
-		ts.TrkPt[wptTypeNo+1].Lon = mid.Lon
-		ts.TrkPt[wptTypeNo+1].Ele = mid.Ele
+		ts.TrkPt[wptTypeNo+1].Ele = MiddleElevation(*ts.TrkPt[wptTypeNo], *ts.TrkPt[closest])
 	}
 }
 
@@ -80,9 +76,9 @@ func findClosestVerticalPoint(ts gpx.TrkSegType, start, max int) int {
 			break
 		}
 		if ts.TrkPt[i].Ele == 0 {
-            continue
-        }
-		elevation := ElevationAbs(*ts.TrkPt[start], *ts.TrkPt[i])
+			continue
+		}
+		elevation := MiddleElevation(*ts.TrkPt[start], *ts.TrkPt[i])
 		if elevation < minElevation || minElevation == 0 {
 			minElevation = elevation
 			minElevationIndex = i
@@ -101,8 +97,8 @@ func findNextVerticalPoint(ts gpx.TrkSegType, start, max int) int {
 			break
 		}
 		if ts.TrkPt[i].Ele != 0 {
-            return i
-        }
+			return i
+		}
 	}
 	// find previous vertical point
 	num = 0
@@ -112,13 +108,17 @@ func findNextVerticalPoint(ts gpx.TrkSegType, start, max int) int {
 			break
 		}
 		if ts.TrkPt[i].Ele != 0 {
-            return i
-        }
+			return i
+		}
 	}
 	return -1
 }
 
 // Return the elevation of the midpoint between two points
 func ElevationAbs(w, pt gpx.WptType) float64 {
-	return w.Ele + math.Abs(w.Ele - pt.Ele) / 2
+	return math.Abs(w.Ele - pt.Ele)
+}
+
+func MiddleElevation(w, pt gpx.WptType) float64 {
+	return pt.Ele + (w.Ele-pt.Ele)/2
 }
