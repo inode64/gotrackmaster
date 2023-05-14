@@ -11,7 +11,7 @@ const (
 
 type GPXElementInfo struct {
 	TrkTypeNo    int
-	wptTypeNo    int
+	WptTypeNo    int
 	TrkSegTypeNo int
 	Length       float64
 	Speed        float64

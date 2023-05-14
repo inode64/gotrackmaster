@@ -16,7 +16,7 @@ func MaxSpeed(g gpx.GPX, max float64, fix bool) []GPXElementInfo {
 						maxSpeedFix(*TrkSegType, wptTypeNo, fix)
 						point = SpeedBetween(*WptType, *TrkSegType.TrkPt[wptTypeNo+1], false)
 						point.WptType = *TrkSegType.TrkPt[wptTypeNo]
-						point.wptTypeNo = wptTypeNo
+						point.WptTypeNo = wptTypeNo
 						point.TrkSegTypeNo = TrkSegTypeNo
 						point.TrkTypeNo = TrkTypeNo
 

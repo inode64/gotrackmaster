@@ -22,7 +22,7 @@ func LostElevation(g gpx.GPX, fix bool) []GPXElementInfo {
 					}
 					point := GPXElementInfo{}
 					point.WptType = *TrkSegType.TrkPt[wptTypeNo]
-					point.wptTypeNo = wptTypeNo
+					point.WptTypeNo = wptTypeNo
 					point.TrkSegTypeNo = TrkSegTypeNo
 					point.TrkTypeNo = TrkTypeNo
 					point.Elevation = TrkSegType.TrkPt[closest].Ele
@@ -44,9 +44,11 @@ func MaxSpeedVertical(g gpx.GPX, max float64, fix bool) []GPXElementInfo {
 				if wptTypeNo != len(TrkSegType.TrkPt)-1 {
 					point := SpeedVerticalBetween(*WptType, *TrkSegType.TrkPt[wptTypeNo+1])
 					if point.Speed > max {
-						maxSpeedVerticalFix(*TrkSegType, wptTypeNo, fix)
+						if fix {
+							gaussianFilter(*TrkSegType, wptTypeNo, wptTypeNo+6, 3, 1.5)
+						}
 						point.WptType = *TrkSegType.TrkPt[wptTypeNo]
-						point.wptTypeNo = wptTypeNo
+						point.WptTypeNo = wptTypeNo
 						point.TrkSegTypeNo = TrkSegTypeNo
 						point.TrkTypeNo = TrkTypeNo
 
@@ -72,6 +74,7 @@ func SpeedVerticalBetween(w, pt gpx.WptType) GPXElementInfo {
 	}
 }
 
+/*
 // maxSpeedVerticalFix finds the maximum vertical speed between two points.
 func maxSpeedVerticalFix(ts gpx.TrkSegType, wptTypeNo int, fix bool) {
 	if fix {
@@ -105,7 +108,7 @@ func findClosestVerticalPoint(ts gpx.TrkSegType, start, max int) int {
 	}
 
 	return minElevationIndex
-}
+}*/
 
 func findNextVerticalPoint(ts gpx.TrkSegType, start, max int) int {
 	var num int

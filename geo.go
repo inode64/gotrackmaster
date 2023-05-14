@@ -48,3 +48,33 @@ func midpoint(coord1, coord2 gpx.WptType) gpx.WptType {
 	zMid := (z1 + z2) / 2
 	return cartesianToGeo(xMid, yMid, zMid)
 }
+
+func gaussianFilter(elevations gpx.TrkSegType, start, end, windowSize int, sigma float64) {
+	if start < 0 {
+		start = 0
+	}
+	smoothed := make([]gpx.WptType, end)
+	for i := start; i < end; i++ {
+		sum := 0.0
+		norm := 0.0
+		for j := 0; j < windowSize; j++ {
+			if i-windowSize/2+j < 0 || i-windowSize/2+j >= len(elevations.TrkPt) {
+				continue
+			}
+			weight := gaussian(float64(j-windowSize/2), sigma)
+			sum += weight * elevations.TrkPt[i-windowSize/2+j].Ele
+			norm += weight
+		}
+		smoothed[i].Ele = sum / norm
+	}
+	for i := start; i < end; i++ {
+		if i >= len(elevations.TrkPt) {
+			continue
+		}
+		elevations.TrkPt[i].Ele = smoothed[i].Ele
+	}
+}
+
+func gaussian(x float64, sigma float64) float64 {
+	return (1.0 / (math.Sqrt(2*math.Pi) * sigma)) * math.Exp(-math.Pow(x, 2.0)/(2*math.Pow(sigma, 2.0)))
+}
