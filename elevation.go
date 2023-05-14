@@ -6,30 +6,28 @@ import (
 	gpx "github.com/twpayne/go-gpx"
 )
 
-// LostElevation finds the lost elevation
+// LostElevation finds the lost elevation.
 func LostElevation(g gpx.GPX, fix bool) []GPXElementInfo {
 	var result []GPXElementInfo
 	for TrkTypeNo, TrkType := range g.Trk {
 		for TrkSegTypeNo, TrkSegType := range TrkType.TrkSeg {
 			for wptTypeNo, WptType := range TrkSegType.TrkPt {
-				if wptTypeNo != len(TrkSegType.TrkPt)-1 {
-					if WptType.Ele == 0 {
-						closest := findNextVerticalPoint(*TrkSegType, wptTypeNo, 10)
-						if closest == -1 {
-							continue
-						}
-						if fix {
-							TrkSegType.TrkPt[wptTypeNo].Ele = TrkSegType.TrkPt[closest].Ele
-						}
-						point := GPXElementInfo{}
-						point.WptType = *TrkSegType.TrkPt[wptTypeNo]
-						point.wptTypeNo = wptTypeNo
-						point.TrkSegTypeNo = TrkSegTypeNo
-						point.TrkTypeNo = TrkTypeNo
-						point.Elevation = TrkSegType.TrkPt[closest].Ele
-
-						result = append(result, point)
+				if WptType.Ele == 0 {
+					closest := findNextVerticalPoint(*TrkSegType, wptTypeNo, 10)
+					if closest == -1 {
+						continue
 					}
+					if fix {
+						TrkSegType.TrkPt[wptTypeNo].Ele = TrkSegType.TrkPt[closest].Ele
+					}
+					point := GPXElementInfo{}
+					point.WptType = *TrkSegType.TrkPt[wptTypeNo]
+					point.wptTypeNo = wptTypeNo
+					point.TrkSegTypeNo = TrkSegTypeNo
+					point.TrkTypeNo = TrkTypeNo
+					point.Elevation = TrkSegType.TrkPt[closest].Ele
+
+					result = append(result, point)
 				}
 			}
 		}
@@ -135,7 +133,7 @@ func findNextVerticalPoint(ts gpx.TrkSegType, start, max int) int {
 	return -1
 }
 
-// Return the elevation of the midpoint between two points
+// Return the elevation of the midpoint between two points.
 func ElevationAbs(w, pt gpx.WptType) float64 {
 	return math.Abs(w.Ele - pt.Ele)
 }
