@@ -14,7 +14,7 @@ func LostElevation(g gpx.GPX, fix bool) []GPXElementInfo {
 	for TrkTypeNo, TrkType := range g.Trk {
 		for TrkSegTypeNo, TrkSegType := range TrkType.TrkSeg {
 			for wptTypeNo, WptType := range TrkSegType.TrkPt {
-				if WptType.Ele == 0 {
+				if WptType.Ele <= 0 {
 					closest := findNextVerticalPoint(*TrkSegType, wptTypeNo, 10)
 					if closest == -1 {
 						continue
