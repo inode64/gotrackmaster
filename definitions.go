@@ -13,6 +13,7 @@ type GPXElementInfo struct {
 	TrkTypeNo    int
 	WptTypeNo    int
 	TrkSegTypeNo int
+	Count        int
 	Length       float64
 	Speed        float64
 	Elevation    float64

@@ -38,6 +38,60 @@ func LostElevation(g gpx.GPX, fix bool) []GPXElementInfo {
 	return result
 }
 
+func ContinuousElevation(g gpx.GPX, count int, fix bool) []GPXElementInfo {
+	var result []GPXElementInfo
+	var lastElevation float64
+	var num, start, end int
+	var point GPXElementInfo
+
+	for TrkTypeNo, TrkType := range g.Trk {
+		for TrkSegTypeNo, TrkSegType := range TrkType.TrkSeg {
+			for wptTypeNo, WptType := range TrkSegType.TrkPt {
+				if lastElevation != WptType.Ele {
+					if num > count {
+						point.Count = start - end + 1
+						result = append(result, point)
+						if fix {
+							continuousElevationFix(*TrkSegType, start, end)
+						}
+					}
+					end = 0
+					num = 0
+					start = wptTypeNo
+				}
+				if num >= count {
+					if end == 0 {
+						point = GPXElementInfo{}
+						point.WptType = *TrkSegType.TrkPt[wptTypeNo]
+						point.WptTypeNo = wptTypeNo
+						point.TrkSegTypeNo = TrkSegTypeNo
+						point.TrkTypeNo = TrkTypeNo
+					}
+					end = wptTypeNo
+				}
+				num++
+				lastElevation = WptType.Ele
+			}
+		}
+	}
+	return result
+}
+
+func continuousElevationFix(ts gpx.TrkSegType, start, end int) {
+	srtm, err := geoelevations.NewSrtm(http.DefaultClient)
+	if err != nil {
+		return
+	}
+
+	for i := start; i < end; i++ {
+		elevation, err := srtm.GetElevation(http.DefaultClient, ts.TrkPt[i].Lat, ts.TrkPt[i].Lon)
+		if err != nil || elevation == 0 {
+			continue
+		}
+		ts.TrkPt[i].Ele = elevation
+	}
+}
+
 // MaxSpeedVertical finds the maximum vertical speed between two points.
 func MaxSpeedVertical(g gpx.GPX, max float64, fix bool) []GPXElementInfo {
 	var result []GPXElementInfo
