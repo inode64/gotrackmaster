@@ -71,7 +71,16 @@ func ContinuousElevation(g gpx.GPX, count int, fix bool) []GPXElementInfo {
 				}
 				num++
 				lastElevation = WptType.Ele
+				end = wptTypeNo
 			}
+			if num > count {
+				point.Count = start - end + 1
+				result = append(result, point)
+				if fix {
+					continuousElevationFix(*TrkSegType, start, end)
+				}
+			}
+
 		}
 	}
 	return result
