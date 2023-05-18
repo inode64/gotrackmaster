@@ -80,7 +80,6 @@ func ContinuousElevation(g gpx.GPX, count int, fix bool) []GPXElementInfo {
 					continuousElevationFix(*TrkSegType, start, end)
 				}
 			}
-
 		}
 	}
 	return result
@@ -218,29 +217,29 @@ func ElevationSRTM(g gpx.GPX, factor float64, fix bool) []GPXElementInfo {
 		return result
 	}
 
-    var hrs float64
-    var lastHRS float64 // high resolution series
+	var hrs float64
+	var lastHRS float64 // high resolution series
 
 	for TrkTypeNo, TrkType := range g.Trk {
 		for TrkSegTypeNo, TrkSegType := range TrkType.TrkSeg {
 			for wptTypeNo, WptType := range TrkSegType.TrkPt {
 				elevation, err := srtm.GetElevation(http.DefaultClient, WptType.Lat, WptType.Lon)
-				if err != nil || elevation == 0 {
+				if err != nil {
 					continue
 				}
 				e := math.Abs(WptType.Ele - elevation)
-				p := e * 100 / WptType.Ele
+				// p := e * 100 / WptType.Ele
 				// fix only when the elevation is more than 10m different and the percentage is more than scale factor
-				// because the STRM elevation is not very accurate, STRM1 30 meters, STRM3 90 meters
-				if p > scale_factor(elevation, factor) {
-				    e = WptType.Ele - lastHRS
-				    if math.Abs(e) < 3 {
-                        elevation = lastHRS + e
-                        hrs += e
-                    } else {
-                        hrs = 0
-                    }
-                    lastHRS = WptType.Ele
+				// because the STRM elevation is not very accurate, STRM1 30 meters or STRM3 90 meters
+				if e > scaleFactor(elevation, factor) {
+					e = WptType.Ele - lastHRS
+					if math.Abs(e) < 5 {
+						hrs += e
+					} else {
+						hrs = 0
+					}
+					elevation += hrs
+					lastHRS = WptType.Ele
 
 					point := GPXElementInfo{}
 					point.WptType = *TrkSegType.TrkPt[wptTypeNo]
@@ -255,14 +254,15 @@ func ElevationSRTM(g gpx.GPX, factor float64, fix bool) []GPXElementInfo {
 						TrkSegType.TrkPt[wptTypeNo].Ele = elevation
 					}
 				} else {
-				    lastHRS = 30000 // force invalidate next point
-                }
+					lastHRS = 30000 // force invalidate next point
+				}
 			}
 		}
 	}
 	return result
 }
 
-func scale_factor(elevation, factor float64) float64 {
-    return elevation * factor * 0,2 + 5
+func scaleFactor(elevation, factor float64) float64 {
+	n := elevation*factor*0.2 + 5
+	return n
 }
