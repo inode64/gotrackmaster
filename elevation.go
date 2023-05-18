@@ -211,12 +211,15 @@ func MiddleElevation(w, pt gpx.WptType) float64 {
 	return pt.Ele + (w.Ele-pt.Ele)/2
 }
 
-func ElevationSRTM(g gpx.GPX, max float64, fix bool) []GPXElementInfo {
+func ElevationSRTM(g gpx.GPX, factor float64, fix bool) []GPXElementInfo {
 	var result []GPXElementInfo
 	srtm, err := geoelevations.NewSrtm(http.DefaultClient)
 	if err != nil {
 		return result
 	}
+
+    var hrs float64
+    var lastHRS float64 // high resolution series
 
 	for TrkTypeNo, TrkType := range g.Trk {
 		for TrkSegTypeNo, TrkSegType := range TrkType.TrkSeg {
@@ -227,9 +230,18 @@ func ElevationSRTM(g gpx.GPX, max float64, fix bool) []GPXElementInfo {
 				}
 				e := math.Abs(WptType.Ele - elevation)
 				p := e * 100 / WptType.Ele
-				// fix only when the elevation is more than 10m different and the percentage is more than max
+				// fix only when the elevation is more than 10m different and the percentage is more than scale factor
 				// because the STRM elevation is not very accurate, STRM1 30 meters, STRM3 90 meters
-				if p > max && e > 10 {
+				if p > scale_factor(elevation, factor) {
+				    e = WptType.Ele - lastHRS
+				    if math.Abs(e) < 3 {
+                        elevation = lastHRS + e
+                        hrs += e
+                    } else {
+                        hrs = 0
+                    }
+                    lastHRS = WptType.Ele
+
 					point := GPXElementInfo{}
 					point.WptType = *TrkSegType.TrkPt[wptTypeNo]
 					point.WptTypeNo = wptTypeNo
@@ -242,9 +254,15 @@ func ElevationSRTM(g gpx.GPX, max float64, fix bool) []GPXElementInfo {
 					if fix {
 						TrkSegType.TrkPt[wptTypeNo].Ele = elevation
 					}
-				}
+				} else {
+				    lastHRS = 30000 // force invalidate next point
+                }
 			}
 		}
 	}
 	return result
+}
+
+func scale_factor(elevation, factor float64) float64 {
+    return elevation * factor * 0,2 + 5
 }
