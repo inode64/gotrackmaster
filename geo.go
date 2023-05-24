@@ -61,7 +61,7 @@ func gaussianFilter(elevations gpx.TrkSegType, start, end, windowSize int, sigma
 			if i-windowSize/2+j < 0 || i-windowSize/2+j >= len(elevations.TrkPt) {
 				continue
 			}
-			weight := gaussian(float64(j-windowSize/2), sigma)
+			weight := Gaussian(float64(j-windowSize/2), sigma)
 			sum += weight * elevations.TrkPt[i-windowSize/2+j].Ele
 			norm += weight
 		}
@@ -75,6 +75,7 @@ func gaussianFilter(elevations gpx.TrkSegType, start, end, windowSize int, sigma
 	}
 }
 
-func gaussian(x, sigma float64) float64 {
+// Calculate Gaussian kernel.
+func Gaussian(x, sigma float64) float64 {
 	return (1.0 / (math.Sqrt(2*math.Pi) * sigma)) * math.Exp(-math.Pow(x, 2.0)/(2*math.Pow(sigma, 2.0)))
 }

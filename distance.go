@@ -47,3 +47,129 @@ func HaversineDistance(lat1, lon1, lat2, lon2 float64) float64 {
 	d := earthRadius * c
 	return d
 }
+
+// Gaussian smooths the positions of a GPX file using a Gaussian filter.
+func SmoothGaussian(g gpx.GPX, windowSize int, sigma float64) {
+	for _, TrkType := range g.Trk {
+		for _, TrkSegType := range TrkType.TrkSeg {
+			gaussianFilterPositions(*TrkSegType, windowSize, sigma)
+		}
+	}
+}
+
+func gaussianFilterPositions(position gpx.TrkSegType, windowSize int, sigma float64) {
+	smoothed := make([]gpx.WptType, len(position.TrkPt))
+	for i := 0; i < len(position.TrkPt); i++ {
+		weights := make([]float64, len(position.TrkPt))
+		sumWeights := 0.0
+		normLat, normLon := 0.0, 0.0
+		for j := -windowSize; j < windowSize; j++ {
+			if i-windowSize/2+j < 0 || i+windowSize/2+j >= len(position.TrkPt) {
+				continue
+			}
+			weights[i-windowSize/2+j] = Gaussian(float64(j-windowSize/2), sigma)
+			sumWeights += weights[i-windowSize/2+j]
+
+			normLat += weights[i-windowSize/2+j] * position.TrkPt[i-windowSize/2+j].Lat
+			normLon += weights[i-windowSize/2+j] * position.TrkPt[i-windowSize/2+j].Lon
+		}
+		smoothed[i].Lat = normLat / sumWeights
+		smoothed[i].Lon = normLon / sumWeights
+	}
+	for i := 0; i < len(position.TrkPt); i++ {
+		if i >= len(position.TrkPt) {
+			continue
+		}
+		position.TrkPt[i].Lat = smoothed[i].Lat
+		position.TrkPt[i].Lon = smoothed[i].Lon
+	}
+}
+
+/*
+
+// Function to smooth the GPS data using Gaussian filter
+// https://github.com/gonum/gonum
+// "gonum.org/v1/gonum/stat/distuv"
+
+type point struct {
+	lat float64
+	lng float64
+}
+
+func smoothGPSData(data []point, sigma float64) []point {
+	smoothedData := make([]point, len(data))
+	x := make([]float64, len(data))
+	y := make([]float64, len(data))
+
+	// Extract the latitude and longitude data into separate slices
+	for i, p := range data {
+		x[i], y[i] = p.lat, p.lng
+	}
+
+	// Create a Gaussian distribution with sigma as the standard deviation
+	dist := distuv.Normal{
+		Mu:    0,
+		Sigma: sigma,
+	}
+
+	// Convolve the data with the Gaussian kernel
+	for i := range x {
+		for j := range y {
+			kernel := dist.Prob(x[i] - x[j])
+			smoothedData[i].lat += kernel * x[j]
+			smoothedData[i].lng += kernel * y[j]
+		}
+	}
+
+	return smoothedData
+}
+
+// a machine learning algorithm to smooth horizontally
+// "github.com/salkj/kmeans"
+func smoothGPSPositions(coordinates [][]float64, numClusters int) [][]float64 {
+	kmeans := kmeans.New()
+	clusters, _ := kmeans.Clusterize(coordinates, numClusters)
+	smoothedPositions := make([][]float64, numClusters)
+	for i, cluster := range clusters {
+		avgLat, avgLon := 0.0, 0.0
+		for _, point := range cluster.Points {
+			avgLat += point[0]
+			avgLon += point[1]
+		}
+		avgLat /= float64(len(cluster.Points))
+		avgLon /= float64(len(cluster.Points))
+		smoothedPositions[i] = []float64{avgLat, avgLon}
+	}
+	return smoothedPositions
+}
+
+// https://jeffreyearly.com/smoothing-and-interpolating-noisy-gps-data/
+// b-spline interpolation
+func smoothGPSData2(data []point, sigma float64) []point {
+	smoothedData := make([]point, len(data))
+	x := make([]float64, len(data))
+	y := make([]float64, len(data))
+
+	// Extract the latitude and longitude data into separate slices
+	for i, p := range data {
+		x[i], y[i] = p.lat, p.lng
+	}
+
+	// Create a Gaussian distribution with sigma as the standard deviation
+	dist := distuv.Normal{
+		Mu:    0,
+		Sigma: sigma,
+	}
+
+	// Convolve the data with the Gaussian kernel
+	for i := range x {
+		for j := range y {
+			kernel := dist.Prob(x[i] - x[j])
+			smoothedData[i].lat += kernel * x[j]
+			smoothedData[i].lng += kernel * y[j]
+		}
+	}
+
+	return smoothedData
+}
+*/
