@@ -4,9 +4,10 @@ import (
 	"os"
 	"testing"
 
-	trackmaster "github.com/inode64/gotrackmaster"
 	"github.com/stretchr/testify/assert"
 	gpx "github.com/twpayne/go-gpx"
+
+	trackmaster "github.com/inode64/gotrackmaster"
 )
 
 // testSpeedFix tests the speed fix algorithm.
@@ -33,7 +34,8 @@ func TestLostElevationSRTM(t *testing.T) {
 		g, err := gpx.Read(f)
 		assert.NoError(t, err)
 		assert.NotNil(t, g)
-		trackmaster.ElevationSRTM(*g, 5,true)
+		err = trackmaster.ElevationSRTM(*g)
+		assert.NoError(t, err)
 		assert.Equal(t, g.Trk[0].TrkSeg[2].TrkPt[265].Ele, 721.0)
 		assert.Equal(t, g.Trk[0].TrkSeg[2].TrkPt[601].Ele, 852.0)
 	})
