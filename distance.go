@@ -48,6 +48,10 @@ func HaversineDistance(lat1, lon1, lat2, lon2 float64) float64 {
 	return d
 }
 
+func HaversineDistanceTrkPt(pointA, pointB gpx.WptType) float64 {
+	return HaversineDistance(pointA.Lat, pointA.Lon, pointB.Lat, pointB.Lon)
+}
+
 // Gaussian smooths the positions of a GPX file using a Gaussian filter.
 func SmoothGaussian(g gpx.GPX, windowSize int, sigma float64) {
 	for _, TrkType := range g.Trk {
@@ -83,6 +87,81 @@ func gaussianFilterPositions(position gpx.TrkSegType, windowSize int, sigma floa
 		position.TrkPt[i].Lat = smoothed[i].Lat
 		position.TrkPt[i].Lon = smoothed[i].Lon
 	}
+}
+
+func RemoveStops(g gpx.GPX, minSeconds, maxDistance float64, fix bool) []GPXElementInfo {
+	var result []GPXElementInfo
+	var distance float64
+	for TrkTypeNo, TrkType := range g.Trk {
+		for TrkSegTypeNo, TrkSegType := range TrkType.TrkSeg {
+			var dst []*gpx.WptType
+			var firstPoint int = -1
+			var numPoints, point int
+			for wptTypeNo, _ := range TrkSegType.TrkPt {
+				if wptTypeNo == len(TrkSegType.TrkPt)-1 {
+					continue
+				}
+
+				if firstPoint == -1 {
+					point = wptTypeNo
+				} else {
+					point = firstPoint
+				}
+
+				distance = HaversineDistanceTrkPt(*TrkSegType.TrkPt[point], *TrkSegType.TrkPt[wptTypeNo+1])
+				if distance <= maxDistance {
+					if firstPoint == -1 {
+						firstPoint = wptTypeNo
+					}
+					numPoints++
+				} else {
+					seconds := TimeDiff(*TrkSegType.TrkPt[point], *TrkSegType.TrkPt[wptTypeNo])
+					if fix {
+						if numPoints > 3 && seconds > minSeconds {
+							dst = append(dst, TrkSegType.TrkPt[firstPoint])
+						} else {
+							if firstPoint != -1 {
+								for i := firstPoint; i < wptTypeNo; i++ {
+									dst = append(dst, TrkSegType.TrkPt[i])
+								}
+							}
+						}
+						dst = append(dst, TrkSegType.TrkPt[wptTypeNo])
+					}
+					if firstPoint != -1 && numPoints > 3 && seconds > minSeconds {
+						point := GPXElementInfo{}
+						point.WptType = *TrkSegType.TrkPt[firstPoint]
+						point.WptTypeNo = firstPoint
+						point.TrkSegTypeNo = TrkSegTypeNo
+						point.TrkTypeNo = TrkTypeNo
+						result = append(result, point)
+					}
+					firstPoint = -1
+					numPoints = 0
+				}
+			}
+			if fix {
+				if numPoints > 3 {
+					dst = append(dst, TrkSegType.TrkPt[firstPoint])
+				} else {
+					for i := len(TrkSegType.TrkPt) - numPoints - 1; i < len(TrkSegType.TrkPt); i++ {
+						dst = append(dst, TrkSegType.TrkPt[i])
+					}
+				}
+				if firstPoint != -1 && numPoints > 3 {
+					point := GPXElementInfo{}
+					point.WptType = *TrkSegType.TrkPt[firstPoint]
+					point.WptTypeNo = firstPoint
+					point.TrkSegTypeNo = TrkSegTypeNo
+					point.TrkTypeNo = TrkTypeNo
+					result = append(result, point)
+				}
+				g.Trk[TrkTypeNo].TrkSeg[TrkSegTypeNo].TrkPt = dst
+			}
+		}
+	}
+
+	return result
 }
 
 /*
