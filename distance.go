@@ -61,6 +61,29 @@ func SmoothGaussian(g gpx.GPX, windowSize int, sigma float64) {
 	}
 }
 
+func findNextCloserPoint(ts gpx.TrkSegType, start, max int, maxDistance, maxElevation float64) (int, float64) {
+	var lastPoint int = -1
+	var minDistance float64 = math.MaxFloat64
+	for i := start + 1; i < start+max; i++ {
+		if i >= len(ts.TrkPt) {
+			break
+		}
+		distance := HaversineDistanceTrkPt(*ts.TrkPt[start], *ts.TrkPt[i])
+		elevation := ElevationAbs(*ts.TrkPt[start], *ts.TrkPt[i])
+
+		if distance < minDistance && distance < maxDistance && elevation <= maxElevation {
+			minDistance = distance
+			lastPoint = i
+		}
+	}
+
+	if lastPoint == -1 {
+		return -1, minDistance
+	}
+
+	return lastPoint, minDistance
+}
+
 func gaussianFilterPositions(position gpx.TrkSegType, windowSize int, sigma float64) {
 	smoothed := make([]gpx.WptType, len(position.TrkPt))
 	for i := 0; i < len(position.TrkPt); i++ {
@@ -87,6 +110,57 @@ func gaussianFilterPositions(position gpx.TrkSegType, windowSize int, sigma floa
 		position.TrkPt[i].Lat = smoothed[i].Lat
 		position.TrkPt[i].Lon = smoothed[i].Lon
 	}
+}
+
+// remove points when accuracy is too low in first point
+func RemoveFirstNoise(g gpx.GPX, fix bool) []GPXElementInfo {
+	var result []GPXElementInfo
+	for TrkTypeNo, TrkType := range g.Trk {
+		for TrkSegTypeNo, TrkSegType := range TrkType.TrkSeg {
+			var dst []*gpx.WptType
+			for i := 0; i < 11; i++ {
+				if i+1 >= len(TrkSegType.TrkPt) {
+					if fix {
+						dst = append(dst, TrkSegType.TrkPt[i])
+					}
+					break
+				}
+
+				nextDistance := HaversineDistanceTrkPt(*TrkSegType.TrkPt[i], *TrkSegType.TrkPt[i+1])
+				closerPoint, closerDistance := findNextCloserPoint(*TrkSegType, i, 5, 8, 0)
+				if nextDistance > closerDistance {
+					point := GPXElementInfo{}
+					point.WptType = *TrkSegType.TrkPt[i]
+					point.WptTypeNo = i
+					point.TrkSegTypeNo = TrkSegTypeNo
+					point.TrkTypeNo = TrkTypeNo
+					result = append(result, point)
+					if fix {
+						dst = append(dst, TrkSegType.TrkPt[i])
+						if closerPoint >= 10 {
+							dst = append(dst, TrkSegType.TrkPt[closerPoint:]...)
+						} else {
+							dst = append(dst, TrkSegType.TrkPt[closerPoint])
+						}
+					}
+					i = closerPoint
+				} else {
+					if fix {
+						if i >= 10 {
+							dst = append(dst, TrkSegType.TrkPt[i:]...)
+						} else {
+							dst = append(dst, TrkSegType.TrkPt[i])
+						}
+					}
+				}
+			}
+			if fix && len(dst) > 0 {
+				g.Trk[TrkTypeNo].TrkSeg[TrkSegTypeNo].TrkPt = dst
+			}
+
+		}
+	}
+	return result
 }
 
 func RemoveStops(g gpx.GPX, minSeconds, maxDistance float64, fix bool) []GPXElementInfo {
