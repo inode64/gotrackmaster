@@ -64,10 +64,7 @@ func SmoothGaussian(g gpx.GPX, windowSize int, sigma float64) {
 func findNextCloserPoint(ts gpx.TrkSegType, start, max int, maxDistance, maxElevation float64) (int, float64) {
 	var lastPoint int = -1
 	var minDistance float64 = math.MaxFloat64
-	for i := start + 1; i < start+max; i++ {
-		if i >= len(ts.TrkPt) {
-			break
-		}
+	for i := start + 1; i < MinInt(start+max, len(ts.TrkPt)); i++ {
 		distance := HaversineDistanceTrkPt(*ts.TrkPt[start], *ts.TrkPt[i])
 		elevation := ElevationAbs(*ts.TrkPt[start], *ts.TrkPt[i])
 
@@ -78,7 +75,7 @@ func findNextCloserPoint(ts gpx.TrkSegType, start, max int, maxDistance, maxElev
 	}
 
 	if lastPoint == -1 {
-		return -1, minDistance
+		return -1, math.MaxFloat64
 	}
 
 	return lastPoint, minDistance
@@ -129,11 +126,12 @@ func RemoveFirstNoise(g gpx.GPX, fix bool) []GPXElementInfo {
 				nextDistance := HaversineDistanceTrkPt(*TrkSegType.TrkPt[i], *TrkSegType.TrkPt[i+1])
 				closerPoint, closerDistance := findNextCloserPoint(*TrkSegType, i, 5, 8, 0)
 				if nextDistance > closerDistance {
-					point := GPXElementInfo{}
-					point.WptType = *TrkSegType.TrkPt[i]
-					point.WptTypeNo = i
-					point.TrkSegTypeNo = TrkSegTypeNo
-					point.TrkTypeNo = TrkTypeNo
+					point := GPXElementInfo{
+						WptType:      *TrkSegType.TrkPt[i],
+						WptTypeNo:    i,
+						TrkSegTypeNo: TrkSegTypeNo,
+						TrkTypeNo:    TrkTypeNo,
+					}
 					result = append(result, point)
 					if fix {
 						dst = append(dst, TrkSegType.TrkPt[i])
@@ -144,13 +142,11 @@ func RemoveFirstNoise(g gpx.GPX, fix bool) []GPXElementInfo {
 						}
 					}
 					i = closerPoint
-				} else {
-					if fix {
-						if i >= 10 {
-							dst = append(dst, TrkSegType.TrkPt[i:]...)
-						} else {
-							dst = append(dst, TrkSegType.TrkPt[i])
-						}
+				} else if fix {
+					if i >= 10 {
+						dst = append(dst, TrkSegType.TrkPt[i:]...)
+					} else {
+						dst = append(dst, TrkSegType.TrkPt[i])
 					}
 				}
 			}
@@ -163,7 +159,7 @@ func RemoveFirstNoise(g gpx.GPX, fix bool) []GPXElementInfo {
 	return result
 }
 
-func RemoveStops(g gpx.GPX, minSeconds, maxDistance float64, minPoints int, fix bool) []GPXElementInfo {
+func RemoveStops(g gpx.GPX, minSeconds, maxDistance, maxElevation float64, minPoints int, fix bool) []GPXElementInfo {
 	var result []GPXElementInfo
 	var distance float64
 	for TrkTypeNo, TrkType := range g.Trk {
@@ -171,66 +167,75 @@ func RemoveStops(g gpx.GPX, minSeconds, maxDistance float64, minPoints int, fix 
 			var dst []*gpx.WptType
 			var firstPoint int = -1
 			var numPoints, point int
-			for wptTypeNo, _ := range TrkSegType.TrkPt {
-				if wptTypeNo == len(TrkSegType.TrkPt)-1 {
-					continue
-				}
-
+			for wptTypeNo := 0; wptTypeNo < len(TrkSegType.TrkPt)-1; wptTypeNo++ {
 				if firstPoint == -1 {
 					point = wptTypeNo
 				} else {
 					point = firstPoint
 				}
-
 				distance = HaversineDistanceTrkPt(*TrkSegType.TrkPt[point], *TrkSegType.TrkPt[wptTypeNo+1])
-				if distance <= maxDistance {
+				elevation := ElevationAbs(*TrkSegType.TrkPt[point], *TrkSegType.TrkPt[wptTypeNo+1])
+				if distance <= maxDistance && elevation <= maxElevation {
 					if firstPoint == -1 {
 						firstPoint = wptTypeNo
 					}
 					numPoints++
 				} else {
 					seconds := TimeDiff(*TrkSegType.TrkPt[point], *TrkSegType.TrkPt[wptTypeNo])
-					if fix {
-						if numPoints > minPoints && seconds > minSeconds {
-							dst = append(dst, TrkSegType.TrkPt[firstPoint])
-						} else {
-							if firstPoint != -1 {
-								for i := firstPoint; i < wptTypeNo; i++ {
-									dst = append(dst, TrkSegType.TrkPt[i])
-								}
+					if numPoints > minPoints && seconds > minSeconds {
+						distance = HaversineDistanceTrkPt(*TrkSegType.TrkPt[firstPoint], *TrkSegType.TrkPt[wptTypeNo])
+						elevation = ElevationAbs(*TrkSegType.TrkPt[firstPoint], *TrkSegType.TrkPt[wptTypeNo])
+						point := GPXElementInfo{
+							WptType:      *TrkSegType.TrkPt[firstPoint],
+							WptTypeNo:    firstPoint,
+							TrkSegTypeNo: TrkSegTypeNo,
+							TrkTypeNo:    TrkTypeNo,
+							Count:        numPoints,
+							Length:       distance,
+							Elevation:    elevation,
+							Duration:     seconds,
+						}
+						result = append(result, point)
+						if fix {
+							if numPoints > minPoints && seconds > minSeconds {
+								dst = append(dst, TrkSegType.TrkPt[firstPoint])
+							} else {
+								dst = append(dst, TrkSegType.TrkPt[firstPoint:wptTypeNo]...)
+							}
+							// for remove close points
+							if minPoints != 0 {
+								dst = append(dst, TrkSegType.TrkPt[wptTypeNo])
 							}
 						}
-						dst = append(dst, TrkSegType.TrkPt[wptTypeNo])
+					} else {
+						if fix {
+							dst = append(dst, TrkSegType.TrkPt[wptTypeNo])
+						}
 					}
-					if firstPoint != -1 && numPoints > 3 && seconds > minSeconds {
-						point := GPXElementInfo{}
-						point.WptType = *TrkSegType.TrkPt[firstPoint]
-						point.WptTypeNo = firstPoint
-						point.TrkSegTypeNo = TrkSegTypeNo
-						point.TrkTypeNo = TrkTypeNo
-						result = append(result, point)
-					}
-					firstPoint = -1
-					numPoints = 0
+					firstPoint, numPoints = -1, 0
 				}
 			}
 			if fix {
-				if numPoints > minPoints {
-					dst = append(dst, TrkSegType.TrkPt[firstPoint])
-				} else {
-					for i := len(TrkSegType.TrkPt) - numPoints - 1; i < len(TrkSegType.TrkPt); i++ {
-						if i < 0 {
-							continue
-						}
-						dst = append(dst, TrkSegType.TrkPt[i])
+				// revisar porque se pierde el ultimo punto
+				if numPoints == 0 {
+					if len(TrkSegType.TrkPt) != 0 {
+						dst = append(dst, TrkSegType.TrkPt[len(TrkSegType.TrkPt)-1])
 					}
-				}
-				if firstPoint != -1 && numPoints > minPoints {
-					point := GPXElementInfo{}
-					point.WptType = *TrkSegType.TrkPt[firstPoint]
-					point.WptTypeNo = firstPoint
-					point.TrkSegTypeNo = TrkSegTypeNo
-					point.TrkTypeNo = TrkTypeNo
+				} else {
+					dst = append(dst, TrkSegType.TrkPt[firstPoint:]...)
+					distance = HaversineDistanceTrkPt(*TrkSegType.TrkPt[firstPoint], *TrkSegType.TrkPt[len(TrkSegType.TrkPt)-1])
+					elevation := ElevationAbs(*TrkSegType.TrkPt[firstPoint], *TrkSegType.TrkPt[len(TrkSegType.TrkPt)-1])
+					seconds := TimeDiff(*TrkSegType.TrkPt[firstPoint], *TrkSegType.TrkPt[len(TrkSegType.TrkPt)-1])
+					point := GPXElementInfo{
+						WptType:      *TrkSegType.TrkPt[firstPoint],
+						WptTypeNo:    firstPoint,
+						TrkSegTypeNo: TrkSegTypeNo,
+						TrkTypeNo:    TrkTypeNo,
+						Count:        numPoints,
+						Length:       distance,
+						Elevation:    elevation,
+						Duration:     seconds,
+					}
 					result = append(result, point)
 				}
 				g.Trk[TrkTypeNo].TrkSeg[TrkSegTypeNo].TrkPt = dst
