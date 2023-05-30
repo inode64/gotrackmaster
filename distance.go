@@ -163,7 +163,7 @@ func RemoveFirstNoise(g gpx.GPX, fix bool) []GPXElementInfo {
 	return result
 }
 
-func RemoveStops(g gpx.GPX, minSeconds, maxDistance float64, fix bool) []GPXElementInfo {
+func RemoveStops(g gpx.GPX, minSeconds, maxDistance float64, minPoints int, fix bool) []GPXElementInfo {
 	var result []GPXElementInfo
 	var distance float64
 	for TrkTypeNo, TrkType := range g.Trk {
@@ -191,7 +191,7 @@ func RemoveStops(g gpx.GPX, minSeconds, maxDistance float64, fix bool) []GPXElem
 				} else {
 					seconds := TimeDiff(*TrkSegType.TrkPt[point], *TrkSegType.TrkPt[wptTypeNo])
 					if fix {
-						if numPoints > 3 && seconds > minSeconds {
+						if numPoints > minPoints && seconds > minSeconds {
 							dst = append(dst, TrkSegType.TrkPt[firstPoint])
 						} else {
 							if firstPoint != -1 {
@@ -215,14 +215,17 @@ func RemoveStops(g gpx.GPX, minSeconds, maxDistance float64, fix bool) []GPXElem
 				}
 			}
 			if fix {
-				if numPoints > 3 {
+				if numPoints > minPoints {
 					dst = append(dst, TrkSegType.TrkPt[firstPoint])
 				} else {
 					for i := len(TrkSegType.TrkPt) - numPoints - 1; i < len(TrkSegType.TrkPt); i++ {
+						if i < 0 {
+							continue
+						}
 						dst = append(dst, TrkSegType.TrkPt[i])
 					}
 				}
-				if firstPoint != -1 && numPoints > 3 {
+				if firstPoint != -1 && numPoints > minPoints {
 					point := GPXElementInfo{}
 					point.WptType = *TrkSegType.TrkPt[firstPoint]
 					point.WptTypeNo = firstPoint
