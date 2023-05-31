@@ -216,7 +216,6 @@ func RemoveStops(g gpx.GPX, minSeconds, maxDistance, maxElevation float64, minPo
 				}
 			}
 			if fix {
-				// revisar porque se pierde el ultimo punto
 				if numPoints == 0 {
 					if len(TrkSegType.TrkPt) != 0 {
 						dst = append(dst, TrkSegType.TrkPt[len(TrkSegType.TrkPt)-1])

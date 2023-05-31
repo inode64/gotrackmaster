@@ -28,16 +28,64 @@ func MaxSpeed(g gpx.GPX, max float64, fix bool) []GPXElementInfo {
 	return result
 }
 
+func RemoveLastMaxSpeed(g gpx.GPX, max float64, fix bool) []GPXElementInfo {
+	var result []GPXElementInfo
+	for TrkTypeNo, TrkType := range g.Trk {
+		for TrkSegTypeNo, TrkSegType := range TrkType.TrkSeg {
+			var firstPoint int = -1
+			var maxSpeed bool = false
+			var seconds float64
+			for wptTypeNo := len(TrkSegType.TrkPt) - 1; wptTypeNo > 1; wptTypeNo-- {
+				point := SpeedBetween(*TrkSegType.TrkPt[wptTypeNo], *TrkSegType.TrkPt[wptTypeNo-1], false)
+				if point.Duration < 2.5 {
+					continue
+				}
+				if point.Speed < max {
+					if seconds == 0 {
+						firstPoint = wptTypeNo
+					}
+					seconds += point.Duration
+					// prevent stops at stop or traffic lights.
+					if seconds > 120 {
+						break
+					}
+				} else {
+					maxSpeed = true
+					seconds = 0
+				}
+			}
+			if firstPoint != -1 && firstPoint != 0 && maxSpeed {
+				point := GPXElementInfo{
+					WptType:      *TrkSegType.TrkPt[firstPoint],
+					WptTypeNo:    firstPoint,
+					TrkSegTypeNo: TrkSegTypeNo,
+					TrkTypeNo:    TrkTypeNo,
+					Count:        len(TrkSegType.TrkPt) - firstPoint,
+				}
+				result = append(result, point)
+				if fix {
+					g.Trk[TrkTypeNo].TrkSeg[TrkSegTypeNo].TrkPt = TrkSegType.TrkPt[0 : firstPoint+1]
+				}
+			}
+		}
+	}
+	return result
+}
+
 // SpeedBetween calculates the speed between two WptType.
 func SpeedBetween(w, pt gpx.WptType, threeD bool) GPXElementInfo {
 	seconds := TimeDiff(w, pt)
-	var distLen float64
+	var distLen, speed float64
 	if threeD {
 		distLen = Distance3D(w, pt)
 	} else {
 		distLen = Distance2D(w, pt)
 	}
-	speed := distLen / seconds
+	if seconds == 0 {
+		speed = 0.0
+	} else {
+		speed = distLen / seconds
+	}
 
 	return GPXElementInfo{
 		Speed:    speed,
