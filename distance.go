@@ -159,6 +159,37 @@ func RemoveFirstNoise(g gpx.GPX, fix bool) []GPXElementInfo {
 	return result
 }
 
+func RemoveNoise(g gpx.GPX, maxDistance, maxElevation float64, maxPoints int, fix bool) []GPXElementInfo {
+	var result []GPXElementInfo
+	for TrkTypeNo, TrkType := range g.Trk {
+		for TrkSegTypeNo, TrkSegType := range TrkType.TrkSeg {
+			var dst []*gpx.WptType
+			for wptTypeNo := 0; wptTypeNo < len(TrkSegType.TrkPt)-1; wptTypeNo++ {
+				nextDistance := HaversineDistanceTrkPt(*TrkSegType.TrkPt[wptTypeNo], *TrkSegType.TrkPt[wptTypeNo+1])
+				closerPoint, closerDistance := findNextCloserPoint(*TrkSegType, wptTypeNo, maxPoints, maxDistance, maxElevation)
+				if nextDistance > closerDistance {
+					point := GPXElementInfo{
+						WptType:      *TrkSegType.TrkPt[wptTypeNo],
+						WptTypeNo:    wptTypeNo,
+						TrkSegTypeNo: TrkSegTypeNo,
+						TrkTypeNo:    TrkTypeNo,
+					}
+					result = append(result, point)
+					dst = append(dst, TrkSegType.TrkPt[wptTypeNo])
+					dst = append(dst, TrkSegType.TrkPt[closerPoint])
+					wptTypeNo = closerPoint
+				} else {
+					dst = append(dst, TrkSegType.TrkPt[wptTypeNo])
+				}
+			}
+			if fix && len(dst) > 0 {
+				g.Trk[TrkTypeNo].TrkSeg[TrkSegTypeNo].TrkPt = dst
+			}
+		}
+	}
+	return result
+}
+
 func RemoveStops(g gpx.GPX, minSeconds, maxDistance, maxElevation float64, minPoints int, fix bool) []GPXElementInfo {
 	var result []GPXElementInfo
 	var distance float64

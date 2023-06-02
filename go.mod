@@ -8,6 +8,8 @@ require (
 	github.com/twpayne/go-gpx v1.3.0
 )
 
+replace github.com/twpayne/go-gpx => /home/fran/projectos/go-gpx
+
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/lukeroth/gdal v0.0.0-20230422025444-05e99f726ff9 // indirect
