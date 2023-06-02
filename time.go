@@ -88,3 +88,18 @@ func FixTimesTrack(g gpx.GPX, fix bool) int {
 	}
 	return num
 }
+
+// TimeEmpty returns true if there is no time information in the GPX file.
+func TimeEmpty(g gpx.GPX) bool {
+	for _, TrkType := range g.Trk {
+		for _, TrkSegType := range TrkType.TrkSeg {
+			for _, WptType := range TrkSegType.TrkPt {
+				if !WptType.Time.IsZero() {
+					return false
+				}
+			}
+
+		}
+	}
+	return true
+}

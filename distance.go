@@ -173,6 +173,9 @@ func RemoveStops(g gpx.GPX, minSeconds, maxDistance, maxElevation float64, minPo
 				} else {
 					point = firstPoint
 				}
+				if TrkSegType.TrkPt[point].Ele == 0 {
+					TrkSegType.TrkPt[point].Ele = TrkSegType.TrkPt[wptTypeNo+1].Ele
+				}
 				distance = HaversineDistanceTrkPt(*TrkSegType.TrkPt[point], *TrkSegType.TrkPt[wptTypeNo+1])
 				elevation := ElevationAbs(*TrkSegType.TrkPt[point], *TrkSegType.TrkPt[wptTypeNo+1])
 				if distance <= maxDistance && elevation <= maxElevation {
@@ -196,21 +199,17 @@ func RemoveStops(g gpx.GPX, minSeconds, maxDistance, maxElevation float64, minPo
 							Duration:     seconds,
 						}
 						result = append(result, point)
-						if fix {
-							if numPoints > minPoints && seconds > minSeconds {
-								dst = append(dst, TrkSegType.TrkPt[firstPoint])
-							} else {
-								dst = append(dst, TrkSegType.TrkPt[firstPoint:wptTypeNo]...)
-							}
-							// for remove close points
-							if minPoints != 0 {
-								dst = append(dst, TrkSegType.TrkPt[wptTypeNo])
-							}
+						if numPoints > minPoints && seconds > minSeconds {
+							dst = append(dst, TrkSegType.TrkPt[firstPoint])
+						} else {
+							dst = append(dst, TrkSegType.TrkPt[firstPoint:wptTypeNo]...)
 						}
-					} else {
-						if fix {
+						// for remove close points
+						if minPoints != 0 {
 							dst = append(dst, TrkSegType.TrkPt[wptTypeNo])
 						}
+					} else {
+						dst = append(dst, TrkSegType.TrkPt[wptTypeNo])
 					}
 					firstPoint, numPoints = -1, 0
 				}

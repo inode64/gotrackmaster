@@ -39,7 +39,7 @@ func cartesianToGeo(x, y, z float64) gpx.WptType {
 	return gpx.WptType{Lat: lat, Lon: lon, Ele: alt}
 }
 
-// mindpoint returns the midpoint between two coordinates.
+// midpoint returns the midpoint between two coordinates.
 func midpoint(coord1, coord2 gpx.WptType) gpx.WptType {
 	x1, y1, z1 := geoToCartesian(coord1)
 	x2, y2, z2 := geoToCartesian(coord2)
@@ -78,11 +78,4 @@ func gaussianFilter(elevations gpx.TrkSegType, start, end, windowSize int, sigma
 // Calculate Gaussian kernel.
 func Gaussian(x, sigma float64) float64 {
 	return (1.0 / (math.Sqrt(2*math.Pi) * sigma)) * math.Exp(-math.Pow(x, 2.0)/(2*math.Pow(sigma, 2.0)))
-}
-
-func MinInt(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
 }

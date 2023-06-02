@@ -63,6 +63,17 @@ func MaxSpeedVertical(g gpx.GPX, max float64, fix bool) []GPXElementInfo {
 	return result
 }
 
+// RoundElevation rounds the elevation to 2 decimal places.
+func RoundElevation(g gpx.GPX) {
+	for _, TrkType := range g.Trk {
+		for _, TrkSegType := range TrkType.TrkSeg {
+			for _, WptType := range TrkSegType.TrkPt {
+				WptType.Ele = math.Round(WptType.Ele*100) / 100
+			}
+		}
+	}
+}
+
 // SpeedVerticalBetween finds the vertical speed between two points.
 func SpeedVerticalBetween(w, pt gpx.WptType) GPXElementInfo {
 	seconds := TimeDiff(w, pt)
