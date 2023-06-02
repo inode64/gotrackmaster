@@ -155,3 +155,32 @@ func ElevationSRTM(g gpx.GPX) error {
 	}
 	return nil
 }
+
+func ElevationSRTMAccuracy(g gpx.GPX) (error, int) {
+	srtm, err := godem.NewSrtm(godem.SOURCE_ESA)
+	if err != nil {
+		return err, -1
+	}
+
+	var num, total int
+
+	for _, TrkType := range g.Trk {
+		for _, TrkSegType := range TrkType.TrkSeg {
+			for _, WptType := range TrkSegType.TrkPt {
+				elevation, _, err := srtm.GetElevation(WptType.Lat, WptType.Lon)
+				if err != nil {
+					return err, -1
+				}
+				e := math.Abs(elevation-WptType.Ele) * 100 / elevation
+				if e > 8 {
+					num++
+				}
+				total++
+			}
+		}
+	}
+	if total == 0 {
+		return nil, 0
+	}
+	return nil, 100 - (num * 100 / total)
+}
