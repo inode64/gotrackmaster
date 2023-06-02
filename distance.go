@@ -274,3 +274,68 @@ func RemoveStops(g gpx.GPX, minSeconds, maxDistance, maxElevation float64, minPo
 
 	return result
 }
+
+// function to check if the two segments p1q1 and p2q2 intersect
+func doIntersect(p1, q1, p2, q2 gpx.WptType) bool {
+	o1 := orientation(p1, q1, p2)
+	o2 := orientation(p1, q1, q2)
+	o3 := orientation(p2, q2, p1)
+	o4 := orientation(p2, q2, q1)
+
+	if o1 != o2 && o3 != o4 && o1 != 0 && o2 != 0 && o3 != 0 && o4 != 0 {
+		return true
+	}
+
+	return false
+}
+
+// function to find orientation of ordered triplet (p, q, r)
+// returns 0: Colinear points
+// returns 1: Clockwise points
+// returns 2: Counterclockwise
+func orientation(p, q, r gpx.WptType) int {
+	val := (q.Lon-p.Lon)*(r.Lat-q.Lat) - (q.Lat-p.Lat)*(r.Lon-q.Lon)
+
+	if val == 0 {
+		return 0
+	}
+
+	if val > 0 {
+		return 1
+	}
+
+	return 2
+}
+
+// CheckIntersecting - check intersecting segments
+func CheckIntersecting(g gpx.GPX, max int, fix bool) []GPXElementInfo {
+	var result []GPXElementInfo
+
+	for TrkTypeNo, TrkType := range g.Trk {
+		for TrkSegTypeNo, TrkSegType := range TrkType.TrkSeg {
+			for wptTypeNo := 0; wptTypeNo < len(TrkSegType.TrkPt)-1; wptTypeNo++ {
+				var lastPoint int = -1
+				for j := wptTypeNo + 2; j < MinInt(wptTypeNo+max, len(TrkSegType.TrkPt)-1); j++ {
+					if doIntersect(*TrkSegType.TrkPt[wptTypeNo], *TrkSegType.TrkPt[wptTypeNo+1], *TrkSegType.TrkPt[j], *TrkSegType.TrkPt[j+1]) {
+						point := GPXElementInfo{
+							WptType:      *TrkSegType.TrkPt[wptTypeNo],
+							WptTypeNo:    wptTypeNo,
+							TrkSegTypeNo: TrkSegTypeNo,
+							TrkTypeNo:    TrkTypeNo,
+						}
+						result = append(result, point)
+						lastPoint = j + 1
+						break
+					}
+				}
+				if lastPoint != -1 {
+					if fix {
+						TrkSegType.TrkPt = append(TrkSegType.TrkPt[:wptTypeNo+1], TrkSegType.TrkPt[lastPoint:]...)
+					}
+					wptTypeNo = lastPoint - 1
+				}
+			}
+		}
+	}
+	return result
+}
