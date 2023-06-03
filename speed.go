@@ -1,6 +1,8 @@
 package trackmaster
 
 import (
+	"math"
+
 	gpx "github.com/twpayne/go-gpx"
 )
 
@@ -32,6 +34,10 @@ func RemoveLastMaxSpeed(g gpx.GPX, max float64, fix bool) []GPXElementInfo {
 	var result []GPXElementInfo
 	for TrkTypeNo, TrkType := range g.Trk {
 		for TrkSegTypeNo, TrkSegType := range TrkType.TrkSeg {
+			// not enough points
+			if len(TrkSegType.TrkPt) < 80 {
+				continue
+			}
 			var firstPoint int = -1
 			var maxSpeed bool = false
 			var seconds float64
@@ -75,7 +81,7 @@ func RemoveLastMaxSpeed(g gpx.GPX, max float64, fix bool) []GPXElementInfo {
 // SpeedBetween calculates the speed between two WptType.
 func SpeedBetween(w, pt gpx.WptType, threeD bool) GPXElementInfo {
 	seconds := TimeDiff(w, pt)
-	var distLen, speed float64
+	var distLen, speed, speedVertical float64
 	if threeD {
 		distLen = Distance3D(w, pt)
 	} else {
@@ -83,14 +89,21 @@ func SpeedBetween(w, pt gpx.WptType, threeD bool) GPXElementInfo {
 	}
 	if seconds == 0 {
 		speed = 0.0
+		speedVertical = 0.0
 	} else {
 		speed = distLen / seconds
+		speedVertical = math.Abs(w.Ele-pt.Ele) / seconds
+		if w.Ele < pt.Ele {
+			speedVertical = -speedVertical
+		}
 	}
 
 	return GPXElementInfo{
-		Speed:    speed,
-		Length:   distLen,
-		Duration: seconds,
+		Speed:         speed,
+		SpeedVertical: speedVertical,
+		Length:        distLen,
+		Duration:      seconds,
+		Elevation:     w.Ele - pt.Ele,
 	}
 }
 

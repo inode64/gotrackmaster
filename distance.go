@@ -115,14 +115,11 @@ func RemoveFirstNoise(g gpx.GPX, fix bool) []GPXElementInfo {
 	for TrkTypeNo, TrkType := range g.Trk {
 		for TrkSegTypeNo, TrkSegType := range TrkType.TrkSeg {
 			var dst []*gpx.WptType
+			// not enough points
+			if len(TrkSegType.TrkPt) < MinSegmentLength {
+				continue
+			}
 			for i := 0; i < 11; i++ {
-				if i+1 >= len(TrkSegType.TrkPt) {
-					if fix {
-						dst = append(dst, TrkSegType.TrkPt[i])
-					}
-					break
-				}
-
 				nextDistance := HaversineDistanceTrkPt(*TrkSegType.TrkPt[i], *TrkSegType.TrkPt[i+1])
 				closerPoint, closerDistance := findNextCloserPoint(*TrkSegType, i, 5, 8, 0)
 				if nextDistance > closerDistance {
