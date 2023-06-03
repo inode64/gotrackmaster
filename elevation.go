@@ -163,6 +163,7 @@ func ElevationSRTMAccuracy(g gpx.GPX) (error, int) {
 	}
 
 	var num, total int
+	var max1, max2 float64
 
 	for _, TrkType := range g.Trk {
 		for _, TrkSegType := range TrkType.TrkSeg {
@@ -171,13 +172,41 @@ func ElevationSRTMAccuracy(g gpx.GPX) (error, int) {
 				if err != nil {
 					return err, -1
 				}
+				max1 = 9
+				max2 = 45
+				if elevation > 250 {
+					max1 = 8
+					max2 = 40
+				}
+				if elevation > 500 {
+					max1 = 6
+					max2 = 35
+				}
+				if elevation > 1000 {
+					max1 = 4
+					max2 = 30
+				}
+				if elevation > 2000 {
+					max1 = 3
+					max2 = 20
+				}
+				if elevation > 3000 {
+					max1 = 2
+					max2 = 15
+				}
 				e := math.Abs(elevation-WptType.Ele) * 100 / elevation
-				if e > 8 {
+				if e > max1 {
 					num++
+				}
+				if e > max2 {
+					num += 4
 				}
 				total++
 			}
 		}
+	}
+	if num > total {
+		return nil, 0
 	}
 	if total == 0 {
 		return nil, 0
