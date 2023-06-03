@@ -233,14 +233,18 @@ func RemoveStops(g gpx.GPX, minSeconds, maxDistance, maxElevation float64, minPo
 						if numPoints > minPoints && seconds > minSeconds {
 							dst = append(dst, TrkSegType.TrkPt[firstPoint])
 						} else {
-							dst = append(dst, TrkSegType.TrkPt[firstPoint:wptTypeNo]...)
+							dst = append(dst, TrkSegType.TrkPt[firstPoint:wptTypeNo+1]...)
 						}
 						// for remove close points
 						if minPoints != 0 {
 							dst = append(dst, TrkSegType.TrkPt[wptTypeNo])
 						}
 					} else {
-						dst = append(dst, TrkSegType.TrkPt[wptTypeNo])
+						if firstPoint == -1 {
+							dst = append(dst, TrkSegType.TrkPt[wptTypeNo])
+						} else {
+							dst = append(dst, TrkSegType.TrkPt[firstPoint:wptTypeNo+1]...)
+						}
 					}
 					firstPoint, numPoints = -1, 0
 				}
