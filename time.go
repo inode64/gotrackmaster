@@ -103,3 +103,30 @@ func TimeEmpty(g gpx.GPX) bool {
 	}
 	return true
 }
+
+// TimeQuality returns the quality of the time information in the GPX file.
+func TimeQuality(g gpx.GPX) int {
+	var num, total int
+	for _, TrkType := range g.Trk {
+		for _, TrkSegType := range TrkType.TrkSeg {
+			var lastValidTime time.Time
+			for _, WptType := range TrkSegType.TrkPt {
+				if !WptType.Time.IsZero() {
+					num++
+				}
+				if !lastValidTime.IsZero() && WptType.Time.Before(lastValidTime) {
+					num += 4
+				}
+				lastValidTime = WptType.Time
+				total++
+			}
+		}
+	}
+	if num > total {
+		return 0
+	}
+	if total == 0 {
+		return -1
+	}
+	return 100 - (num * 100 / total)
+}
