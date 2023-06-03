@@ -26,7 +26,7 @@ func TimeDiff(w, pt gpx.WptType) float64 {
 func FixTimesSegment(tr gpx.TrkSegType) (gpx.TrkSegType, int) {
 	var num int
 	var lastValidTime time.Time
-	if len(tr.TrkPt) == 0 {
+	if len(tr.TrkPt) < 2 {
 		return tr, num
 	}
 	// Find the first valid time
