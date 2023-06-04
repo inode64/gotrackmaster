@@ -2,6 +2,8 @@ package trackmaster
 
 import (
 	gpx "github.com/twpayne/go-gpx"
+
+	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -50,3 +52,19 @@ const ClassificatiomViaFerrataSport = "Via Ferrata Sport"
 const ClassificatiomMotorSport = "Motor Sport"
 
 const MinSegmentLength = 80
+
+type Config struct {
+	LogLevel logrus.Level
+}
+
+var Log = logrus.New()
+
+/*
+func Init(config *Config) {
+	if config == nil {
+		config.LogLevel = logrus.WarnLevel
+	}
+
+	Log.SetLevel(config.LogLevel)
+}
+*/

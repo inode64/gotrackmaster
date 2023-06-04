@@ -3,6 +3,8 @@ package trackmaster
 import (
 	"math"
 
+	"github.com/sirupsen/logrus"
+
 	gpx "github.com/twpayne/go-gpx"
 )
 
@@ -115,4 +117,88 @@ func PreviousSegment(g gpx.GPX, TrkTypeNo, TrkSegTypeNo int) (int, int) {
 		TrkSegTypeNo--
 	}
 	return TrkTypeNo, TrkSegTypeNo
+}
+
+func ClassificationTrack(g *gpx.GPX) string {
+	var speedUp, speedDown, speedFlat, speedTotal, elevation, distance float64
+	var total int
+
+	for _, TrkType := range g.Trk {
+		for _, TrkSegType := range TrkType.TrkSeg {
+			if len(TrkSegType.TrkPt) < MinSegmentLength {
+				continue
+			}
+			div := len(TrkSegType.TrkPt) / 9
+			// only check middle 77,7% of track
+			for i := div; i < len(TrkSegType.TrkPt)-div; i++ {
+				point := SpeedBetween(*TrkSegType.TrkPt[i], *TrkSegType.TrkPt[i+1], false)
+				if point.SpeedVertical <= 0.4 {
+					speedFlat += point.Speed
+				}
+				if point.SpeedVertical > 0.4 {
+					speedUp += point.Speed
+				}
+				if point.SpeedVertical < -0.4 {
+					speedDown += point.Speed
+				}
+				speedTotal += point.Speed
+				elevation += math.Abs(point.Elevation)
+				distance += point.Length
+
+				total++
+			}
+		}
+	}
+
+	speedUp /= float64(total)
+	speedDown /= float64(total)
+	speedFlat /= float64(total)
+	speedTotal /= float64(total)
+
+	c := ClassificationNone
+
+	if total != 0 {
+		// Flat sports
+		if (elevation / distance) < 0.05 {
+			c = ClassificatiomWalkingTransport
+			if speedFlat > 1.6 {
+				c = ClassificatiomRunningSport
+			}
+			if speedFlat > 4.1 {
+				c = ClassificatiomCyClingTransport
+			}
+			if speedFlat > 7.5 {
+				c = ClassificatiomCyClingSport
+			}
+			if speedFlat > 11 {
+				c = ClassificatiomCyClingRacing
+			}
+			if speedFlat > 25 {
+				c = ClassificatiomMotorSport
+			}
+		} else {
+			c = ClassificatiomWalkingMountain
+			if speedDown < 0.1 && speedTotal < 0.5 {
+				c = ClassificatiomViaFerrataSport
+			}
+			if speedFlat > 1.2 || speedTotal > 1.3 {
+				c = ClassificatiomRunningMountain
+			}
+			if speedFlat > 3.8 || speedTotal > 3.8 {
+				c = ClassificatiomCyClingMountain
+			}
+		}
+	}
+
+	Log.WithFields(logrus.Fields{
+		"Elevation":                          elevation,
+		"Ratio of elevation versus distance": elevation / distance,
+		"Upload speed":                       speedUp,
+		"Lowering speed":                     speedDown,
+		"Flat speed":                         speedFlat,
+		"Average speed":                      speedTotal,
+		"Classificacion":                     c,
+	}).Debug("Classification result")
+
+	return c
 }
