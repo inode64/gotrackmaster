@@ -2,6 +2,7 @@ package trackmaster
 
 import (
 	"math"
+	"os"
 
 	"github.com/sirupsen/logrus"
 
@@ -119,17 +120,52 @@ func PreviousSegment(g gpx.GPX, TrkTypeNo, TrkSegTypeNo int) (int, int) {
 	return TrkTypeNo, TrkSegTypeNo
 }
 
-func ClassificationTrack(g *gpx.GPX) string {
+func ClassificationTrack(filename string) string {
 	var speedUp, speedDown, speedFlat, speedTotal, elevation, distance float64
 	var total int
+
+	f, err := os.Open(filename)
+	if err != nil {
+		return ClassificationNone
+	}
+	defer f.Close()
+
+	g, err := gpx.Read(f)
+	if err != nil {
+		return ClassificationNone
+	}
+
+	// primero se corrige los puntos sin hora, porque se necesita para el resto de funciones
+	_ = FixTimesTrack(*g, true)
+
+	// Quita los puntos que se han grabado exageradamente lejos, a mas de 200 m/s
+	_ = MaxSpeed(*g, 200, true)
+
+	// Esto nos puede venir bien porque simplifica el track y quita los puntos que no son necesarios
+	_ = RemoveStops(*g, 0.0, 1.2, math.MaxFloat64, 0, true)
+
+	// Quitamos las paradas de mas de 90 segundo en menos de 5 metros
+	_ = RemoveStops(*g, 30.0, 9.0, 8, 12, true)
+
+	CheckIntersecting(*g, 7, true)
+	CheckIntersecting(*g, 7, true)
+	CheckIntersecting(*g, 7, true)
+	CheckIntersecting(*g, 7, true)
+
+	err, num := ElevationSRTMAccuracy(*g)
+	if err != nil {
+		if num < 60 {
+			ElevationSRTM(*g)
+		}
+	}
 
 	for _, TrkType := range g.Trk {
 		for _, TrkSegType := range TrkType.TrkSeg {
 			if len(TrkSegType.TrkPt) < MinSegmentLength {
 				continue
 			}
-			div := len(TrkSegType.TrkPt) / 9
-			// only check middle 77,7% of track
+			div := len(TrkSegType.TrkPt) / 10
+			// only check middle 80.0% of track
 			for i := div; i < len(TrkSegType.TrkPt)-div; i++ {
 				point := SpeedBetween(*TrkSegType.TrkPt[i], *TrkSegType.TrkPt[i+1], false)
 				if point.SpeedVertical <= 0.4 {
