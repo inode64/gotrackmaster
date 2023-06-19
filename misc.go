@@ -135,16 +135,16 @@ func ClassificationTrack(filename string) string {
 		return ClassificationNone
 	}
 
-	// primero se corrige los puntos sin hora, porque se necesita para el resto de funciones
+	// first the points without time are corrected, because it is needed for the rest of the functions
 	_ = FixTimesTrack(*g, true)
 
-	// Quita los puntos que se han grabado exageradamente lejos, a mas de 200 m/s
+	// Removes points that have been recorded excessively far away, at more than 200 m/s
 	_ = MaxSpeed(*g, 200, true)
 
-	// Esto nos puede venir bien porque simplifica el track y quita los puntos que no son necesarios
+	// Simplifies the track and removes points that are not necessary
 	_ = RemoveStops(*g, 0.0, 1.2, math.MaxFloat64, 0, true)
 
-	// Quitamos las paradas de mas de 90 segundo en menos de 5 metros
+	// We remove the stops of more than 90 seconds in less than 5 meters
 	_ = RemoveStops(*g, 30.0, 9.0, 8, 12, true)
 
 	CheckIntersecting(*g, 7, true)
@@ -152,7 +152,7 @@ func ClassificationTrack(filename string) string {
 	CheckIntersecting(*g, 7, true)
 	CheckIntersecting(*g, 7, true)
 
-	err, num := ElevationSRTMAccuracy(*g)
+	num, err := ElevationSRTMAccuracy(*g)
 	if err != nil {
 		if num < 60 {
 			ElevationSRTM(*g)
@@ -196,32 +196,34 @@ func ClassificationTrack(filename string) string {
 	if total != 0 {
 		// Flat sports
 		if (elevation / distance) < 0.05 {
-			c = ClassificatiomWalkingTransport
+			c = ClassificationWalkingTransport
 			if speedFlat > 1.6 {
-				c = ClassificatiomRunningSport
+				c = ClassificationRunningSport
 			}
 			if speedFlat > 4.1 {
-				c = ClassificatiomCyClingTransport
+				c = ClassificationCyClingTransport
 			}
 			if speedFlat > 7.5 {
-				c = ClassificatiomCyClingSport
+				c = ClassificationCyClingSport
 			}
 			if speedFlat > 11 {
-				c = ClassificatiomCyClingRacing
+				c = ClassificationCyClingRacing
 			}
 			if speedFlat > 25 {
-				c = ClassificatiomMotorSport
+				c = ClassificationMotorSport
 			}
 		} else {
-			c = ClassificatiomWalkingMountain
+			c = ClassificationWalkingMountain
+			/* TODO: Check this
 			if speedDown < 0.1 && speedTotal < 0.5 {
-				c = ClassificatiomViaFerrataSport
+				c = ClassificationViaFerrataSport
 			}
+			*/
 			if speedFlat > 1.2 || speedTotal > 1.3 {
-				c = ClassificatiomRunningMountain
+				c = ClassificationRunningMountain
 			}
 			if speedFlat > 3.8 || speedTotal > 3.8 {
-				c = ClassificatiomCyClingMountain
+				c = ClassificationCyClingMountain
 			}
 		}
 	}
@@ -233,7 +235,7 @@ func ClassificationTrack(filename string) string {
 		"Lowering speed":                     speedDown,
 		"Flat speed":                         speedFlat,
 		"Average speed":                      speedTotal,
-		"Classificacion":                     c,
+		"Classification":                     c,
 	}).Debug("Classification result")
 
 	return c

@@ -156,10 +156,10 @@ func ElevationSRTM(g gpx.GPX) error {
 	return nil
 }
 
-func ElevationSRTMAccuracy(g gpx.GPX) (error, int) {
+func ElevationSRTMAccuracy(g gpx.GPX) (int, error) {
 	srtm, err := godem.NewSrtm(godem.SOURCE_ESA)
 	if err != nil {
-		return err, -1
+		return -1, err
 	}
 
 	var num, total int
@@ -170,7 +170,7 @@ func ElevationSRTMAccuracy(g gpx.GPX) (error, int) {
 			for _, WptType := range TrkSegType.TrkPt {
 				elevation, _, err := srtm.GetElevation(WptType.Lat, WptType.Lon)
 				if err != nil {
-					return err, -1
+					return -1, err
 				}
 				max1 = 9
 				max2 = 45
@@ -206,10 +206,10 @@ func ElevationSRTMAccuracy(g gpx.GPX) (error, int) {
 		}
 	}
 	if num > total {
-		return nil, 0
+		return 0, nil
 	}
 	if total == 0 {
-		return nil, 0
+		return 0, nil
 	}
-	return nil, 100 - (num * 100 / total)
+	return 100 - (num * 100 / total), nil
 }
