@@ -23,9 +23,9 @@ func distance(lat1, lon1, ele1, lat2, lon2, ele2 float64, threeD, haversine bool
 	if haversine || absLat > 0.2 || absLon > 0.2 {
 		return HaversineDistance(lat1, lon1, lat2, lon2)
 	}
-	coef := math.Cos(toRadians(lat1))
+	coefficient := math.Cos(toRadians(lat1))
 	x := lat1 - lat2
-	y := (lon1 - lon2) * coef
+	y := (lon1 - lon2) * coefficient
 	distance2d := math.Sqrt(x*x+y*y) * oneDegree
 	if !threeD || ele1 == ele2 {
 		return distance2d

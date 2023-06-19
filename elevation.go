@@ -140,7 +140,7 @@ func ElevationSRTM(g gpx.GPX) error {
 				}
 				e := math.Abs(WptType.Ele - lastHRS)
 				// fix only when the elevation is more than 10m different and the percentage is more than 3 meters
-				// because the STRM elevation is not very accurate, STRM1 30 meters or STRM3 90 meters
+				// because the SRTM elevation is not very accurate, SRTM1 30 meters or SRTM3 90 meters
 				if math.Abs(e) > 3 || lastLRS != elevation {
 					hrs = 0
 				}
