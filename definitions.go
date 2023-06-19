@@ -24,7 +24,7 @@ type GPXElementInfo struct {
 	WptType       gpx.WptType
 }
 
-const ClassificationNone = "Unkonwn"
+const ClassificationNone = "Unknown"
 const ClassificationCyClingSport = "Cycling Sport"
 const ClassificationCyClingMountain = "Cycling Mountain"
 const ClassificationCyClingTransport = "Cycling Transport"
