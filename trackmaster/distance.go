@@ -109,7 +109,7 @@ func gaussianFilterPositions(position gpx.TrkSegType, windowSize int, sigma floa
 	}
 }
 
-// remove points when accuracy is too low in first point
+// remove points when accuracy is too low in first point.
 func RemoveFirstNoise(g gpx.GPX, fix bool) []GPXElementInfo {
 	var result []GPXElementInfo
 	for TrkTypeNo, TrkType := range g.Trk {
@@ -150,7 +150,6 @@ func RemoveFirstNoise(g gpx.GPX, fix bool) []GPXElementInfo {
 			if fix && len(dst) > 0 {
 				g.Trk[TrkTypeNo].TrkSeg[TrkSegTypeNo].TrkPt = dst
 			}
-
 		}
 	}
 	return result
@@ -276,7 +275,7 @@ func RemoveStops(g gpx.GPX, minSeconds, maxDistance, maxElevation float64, minPo
 	return result
 }
 
-// function to check if the two segments p1q1 and p2q2 intersect
+// function to check if the two segments p1q1 and p2q2 intersect.
 func doIntersect(p1, q1, p2, q2 gpx.WptType) bool {
 	o1 := orientation(p1, q1, p2)
 	o2 := orientation(p1, q1, q2)
@@ -308,7 +307,7 @@ func orientation(p, q, r gpx.WptType) int {
 	return 2
 }
 
-// CheckIntersecting - check intersecting segments
+// CheckIntersecting - check intersecting segments.
 func CheckIntersecting(g gpx.GPX, max int, fix bool) []GPXElementInfo {
 	var result []GPXElementInfo
 

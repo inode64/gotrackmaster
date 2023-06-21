@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	gpx "github.com/twpayne/go-gpx"
 
-	trackmaster "github.com/inode64/gotrackmaster"
+	trackmaster "github.com/inode64/gotrackmaster/trackmaster"
 )
 
 // testTimeFix tests the time fix function.
@@ -23,11 +23,11 @@ func TestTimeFix(t *testing.T) {
 		assert.NotNil(t, g)
 		n := trackmaster.FixTimesTrack(*g, true)
 		assert.Equal(t, 39, n)
-		datetest := time.Date(2015, time.April, 18, 7, 57, 51, 500000000, time.UTC)
-		datetrack := g.Trk[0].TrkSeg[0].TrkPt[1].Time
-		assert.Equal(t, datetrack, datetest)
-		datetest = time.Date(2015, time.April, 18, 8, 4, 23, 0, time.UTC)
-		datetrack = g.Trk[0].TrkSeg[0].TrkPt[4].Time
-		assert.Equal(t, datetrack, datetest)
+		dateTest := time.Date(2015, time.April, 18, 7, 57, 51, 500000000, time.UTC)
+		dateTrack := g.Trk[0].TrkSeg[0].TrkPt[1].Time
+		assert.Equal(t, dateTrack, dateTest)
+		dateTest = time.Date(2015, time.April, 18, 8, 4, 23, 0, time.UTC)
+		dateTrack = g.Trk[0].TrkSeg[0].TrkPt[4].Time
+		assert.Equal(t, dateTrack, dateTest)
 	})
 }

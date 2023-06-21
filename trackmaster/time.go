@@ -98,7 +98,6 @@ func TimeEmpty(g gpx.GPX) bool {
 					return false
 				}
 			}
-
 		}
 	}
 	return true
