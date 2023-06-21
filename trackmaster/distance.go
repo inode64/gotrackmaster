@@ -62,8 +62,8 @@ func SmoothGaussian(g gpx.GPX, windowSize int, sigma float64) {
 }
 
 func findNextCloserPoint(ts gpx.TrkSegType, start, max int, maxDistance, maxElevation float64) (int, float64) {
-	var lastPoint int = -1
-	var minDistance float64 = math.MaxFloat64
+	lastPoint := -1
+	minDistance := math.MaxFloat64
 	for i := start + 1; i < MinInt(start+max, len(ts.TrkPt)); i++ {
 		distance := HaversineDistanceTrkPt(*ts.TrkPt[start], *ts.TrkPt[i])
 		elevation := ElevationAbs(*ts.TrkPt[start], *ts.TrkPt[i])
@@ -192,7 +192,7 @@ func RemoveStops(g gpx.GPX, minSeconds, maxDistance, maxElevation float64, minPo
 	for TrkTypeNo, TrkType := range g.Trk {
 		for TrkSegTypeNo, TrkSegType := range TrkType.TrkSeg {
 			var dst []*gpx.WptType
-			var firstPoint int = -1
+			firstPoint := -1
 			var numPoints, point int
 			for wptTypeNo := 0; wptTypeNo < len(TrkSegType.TrkPt)-1; wptTypeNo++ {
 				if firstPoint == -1 {
@@ -289,21 +289,21 @@ func doIntersect(p1, q1, p2, q2 gpx.WptType) bool {
 	return false
 }
 
-// function to find orientation of ordered triplet (p, q, r)
-// returns 0: Colinear points
-// returns 1: Clockwise points
-// returns 2: Counterclockwise
+// function to find orientation of ordered triplet (p, q, r).
 func orientation(p, q, r gpx.WptType) int {
 	val := (q.Lon-p.Lon)*(r.Lat-q.Lat) - (q.Lat-p.Lat)*(r.Lon-q.Lon)
 
 	if val == 0 {
+		// returns Colinear points
 		return 0
 	}
 
 	if val > 0 {
+		// returns Clockwise points
 		return 1
 	}
 
+	// returns Counterclockwise
 	return 2
 }
 
@@ -314,7 +314,7 @@ func CheckIntersecting(g gpx.GPX, max int, fix bool) []GPXElementInfo {
 	for TrkTypeNo, TrkType := range g.Trk {
 		for TrkSegTypeNo, TrkSegType := range TrkType.TrkSeg {
 			for wptTypeNo := 0; wptTypeNo < len(TrkSegType.TrkPt)-1; wptTypeNo++ {
-				var lastPoint int = -1
+				lastPoint := -1
 				for j := wptTypeNo + 2; j < MinInt(wptTypeNo+max, len(TrkSegType.TrkPt)-1); j++ {
 					if doIntersect(*TrkSegType.TrkPt[wptTypeNo], *TrkSegType.TrkPt[wptTypeNo+1], *TrkSegType.TrkPt[j], *TrkSegType.TrkPt[j+1]) {
 						point := GPXElementInfo{

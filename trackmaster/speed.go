@@ -38,8 +38,8 @@ func RemoveLastMaxSpeed(g gpx.GPX, max float64, fix bool) []GPXElementInfo {
 			if len(TrkSegType.TrkPt) < MinSegmentLength {
 				continue
 			}
-			var firstPoint int = -1
-			var maxSpeed bool = false
+			firstPoint := -1
+			maxSpeed := false
 			var seconds float64
 			for wptTypeNo := len(TrkSegType.TrkPt) - 1; wptTypeNo > 1; wptTypeNo-- {
 				point := SpeedBetween(*TrkSegType.TrkPt[wptTypeNo], *TrkSegType.TrkPt[wptTypeNo-1], false)

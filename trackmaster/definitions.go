@@ -1,9 +1,8 @@
 package trackmaster
 
 import (
-	gpx "github.com/twpayne/go-gpx"
-
 	"github.com/sirupsen/logrus"
+	gpx "github.com/twpayne/go-gpx"
 )
 
 const (

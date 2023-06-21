@@ -1,4 +1,4 @@
-package trackmaster
+package lib
 
 import (
 	"fmt"

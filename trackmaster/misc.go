@@ -5,7 +5,6 @@ import (
 	"os"
 
 	"github.com/sirupsen/logrus"
-
 	gpx "github.com/twpayne/go-gpx"
 )
 
@@ -25,39 +24,39 @@ func MoveSegment(g gpx.GPX, minPoints int, fix bool) []GPXElementInfo {
 	var result []GPXElementInfo
 	var move []MoveTrk
 	dst := g
-	for TrkTypeNo, TrkType := range g.Trk {
+	for trkTypeNo, TrkType := range g.Trk {
 		if len(TrkType.TrkSeg) < 2 {
 			continue
 		}
-		for TrkSegTypeNo, TrkSegType := range TrkType.TrkSeg {
+		for trkSegTypeNo, TrkSegType := range TrkType.TrkSeg {
 			if len(TrkSegType.TrkPt) > minPoints {
 				continue
 			}
-			move = append(move, MoveTrk{TrkTypeNo, TrkSegTypeNo})
+			move = append(move, MoveTrk{trkTypeNo, trkSegTypeNo})
 			if len(TrkSegType.TrkPt) == 0 {
 				continue
 			}
-			pre := CompareTime(g, TrkTypeNo, TrkSegTypeNo, false)
-			next := CompareTime(g, TrkTypeNo, TrkSegTypeNo, true)
+			pre := CompareTime(g, trkTypeNo, trkSegTypeNo, false)
+			next := CompareTime(g, trkTypeNo, trkSegTypeNo, true)
 			var point GPXElementInfo
 			if pre < next {
 				point = GPXElementInfo{
 					WptType:      *TrkSegType.TrkPt[0],
 					WptTypeNo:    0,
-					TrkSegTypeNo: TrkSegTypeNo,
-					TrkTypeNo:    TrkTypeNo,
+					TrkSegTypeNo: trkSegTypeNo,
+					TrkTypeNo:    trkTypeNo,
 					Count:        len(TrkSegType.TrkPt),
 				}
-				dst.Trk[TrkTypeNo].TrkSeg[TrkSegTypeNo-1].TrkPt = append(dst.Trk[TrkTypeNo].TrkSeg[TrkSegTypeNo-1].TrkPt, TrkSegType.TrkPt...)
+				dst.Trk[trkTypeNo].TrkSeg[trkSegTypeNo-1].TrkPt = append(dst.Trk[trkTypeNo].TrkSeg[trkSegTypeNo-1].TrkPt, TrkSegType.TrkPt...)
 			} else {
 				point = GPXElementInfo{
 					WptType:      *TrkSegType.TrkPt[len(TrkSegType.TrkPt)-1],
 					WptTypeNo:    len(TrkSegType.TrkPt) - 1,
-					TrkSegTypeNo: TrkSegTypeNo,
-					TrkTypeNo:    TrkTypeNo,
+					TrkSegTypeNo: trkSegTypeNo,
+					TrkTypeNo:    trkTypeNo,
 					Count:        len(TrkSegType.TrkPt),
 				}
-				dst.Trk[TrkTypeNo].TrkSeg[TrkSegTypeNo+1].TrkPt = append(TrkSegType.TrkPt, dst.Trk[TrkTypeNo].TrkSeg[TrkSegTypeNo+1].TrkPt...)
+				dst.Trk[trkTypeNo].TrkSeg[trkSegTypeNo+1].TrkPt = append(TrkSegType.TrkPt, dst.Trk[trkTypeNo].TrkSeg[trkSegTypeNo+1].TrkPt...)
 			}
 			result = append(result, point)
 		}
@@ -77,47 +76,47 @@ func MoveSegment(g gpx.GPX, minPoints int, fix bool) []GPXElementInfo {
 	return result
 }
 
-func CompareTime(g gpx.GPX, TrkTypeNo, TrkSegTypeNo int, end bool) float64 {
+func CompareTime(g gpx.GPX, trkTypeNo, trkSegTypeNo int, end bool) float64 {
 	if end {
-		p := *g.Trk[TrkTypeNo].TrkSeg[TrkSegTypeNo].TrkPt[len(g.Trk[TrkTypeNo].TrkSeg[TrkSegTypeNo].TrkPt)-1]
-		TrkTypeNo, TrkSegTypeNo = NextSegment(g, TrkTypeNo, TrkSegTypeNo)
-		if TrkTypeNo == -1 {
+		p := *g.Trk[trkTypeNo].TrkSeg[trkSegTypeNo].TrkPt[len(g.Trk[trkTypeNo].TrkSeg[trkSegTypeNo].TrkPt)-1]
+		trkTypeNo, trkSegTypeNo = NextSegment(g, trkTypeNo, trkSegTypeNo)
+		if trkTypeNo == -1 {
 			return math.MaxFloat64
 		}
-		return TimeDiff(p, *g.Trk[TrkTypeNo].TrkSeg[TrkSegTypeNo].TrkPt[0])
+		return TimeDiff(p, *g.Trk[trkTypeNo].TrkSeg[trkSegTypeNo].TrkPt[0])
 	}
-	p := *g.Trk[TrkTypeNo].TrkSeg[TrkSegTypeNo].TrkPt[0]
-	TrkTypeNo, TrkSegTypeNo = PreviousSegment(g, TrkTypeNo, TrkSegTypeNo)
-	if TrkTypeNo == -1 {
+	p := *g.Trk[trkTypeNo].TrkSeg[trkSegTypeNo].TrkPt[0]
+	trkTypeNo, trkSegTypeNo = PreviousSegment(g, trkTypeNo, trkSegTypeNo)
+	if trkTypeNo == -1 {
 		return math.MaxFloat64
 	}
-	return TimeDiff(p, *g.Trk[TrkTypeNo].TrkSeg[TrkSegTypeNo].TrkPt[len(g.Trk[TrkTypeNo].TrkSeg[TrkSegTypeNo].TrkPt)-1])
+	return TimeDiff(p, *g.Trk[trkTypeNo].TrkSeg[trkSegTypeNo].TrkPt[len(g.Trk[trkTypeNo].TrkSeg[trkSegTypeNo].TrkPt)-1])
 }
 
-func NextSegment(g gpx.GPX, TrkTypeNo, TrkSegTypeNo int) (int, int) {
-	if TrkSegTypeNo >= len(g.Trk[TrkTypeNo].TrkSeg)-1 {
-		TrkSegTypeNo = 0
-		TrkTypeNo++
-		if TrkTypeNo >= len(g.Trk)-1 {
+func NextSegment(g gpx.GPX, trkTypeNo, trkSegTypeNo int) (int, int) {
+	if trkSegTypeNo >= len(g.Trk[trkTypeNo].TrkSeg)-1 {
+		trkSegTypeNo = 0
+		trkTypeNo++
+		if trkTypeNo >= len(g.Trk)-1 {
 			return -1, -1
 		}
 	} else {
-		TrkSegTypeNo++
+		trkSegTypeNo++
 	}
-	return TrkTypeNo, TrkSegTypeNo
+	return trkTypeNo, trkSegTypeNo
 }
 
-func PreviousSegment(g gpx.GPX, TrkTypeNo, TrkSegTypeNo int) (int, int) {
-	if TrkSegTypeNo <= 0 {
-		TrkSegTypeNo = len(g.Trk[TrkTypeNo].TrkSeg) - 1
-		TrkTypeNo--
-		if TrkTypeNo <= 0 {
+func PreviousSegment(g gpx.GPX, trkTypeNo, trkSegTypeNo int) (int, int) {
+	if trkSegTypeNo <= 0 {
+		trkSegTypeNo = len(g.Trk[trkTypeNo].TrkSeg) - 1
+		trkTypeNo--
+		if trkTypeNo <= 0 {
 			return -1, -1
 		}
 	} else {
-		TrkSegTypeNo--
+		trkSegTypeNo--
 	}
-	return TrkTypeNo, TrkSegTypeNo
+	return trkTypeNo, trkSegTypeNo
 }
 
 func ClassificationTrack(filename string) string {
@@ -155,7 +154,7 @@ func ClassificationTrack(filename string) string {
 	num, err := ElevationSRTMAccuracy(*g)
 	if err != nil {
 		if num < 60 {
-			ElevationSRTM(*g)
+			_ = ElevationSRTM(*g)
 		}
 	}
 
