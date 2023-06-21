@@ -12,7 +12,7 @@ import (
 
 // testSpeedFix tests the speed fix algorithm.
 func TestSpeedFix(t *testing.T) {
-	filename := "testdata/2020-10-03_09-05_Sat_pedraforta.gpx"
+	filename := "testdata/2020-10-03_09-05_Sat_pedraforca.gpx"
 	t.Run(filename, func(t *testing.T) {
 		f, err := os.Open(filename)
 		assert.NoError(t, err)
