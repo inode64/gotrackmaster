@@ -18,8 +18,8 @@ var rootCmd = &cobra.Command{
 Features include maximum speed calculations, slope computations, removal of erratic points,
 track simplification, and more. Ideal for outdoor enthusiasts, athletes,
 and GIS professionals seeking insights from their GPX data.`,
-	Args:    cobra.MinimumNArgs(0),
 	Version: "1.0.0",
+	Args:    cobra.MinimumNArgs(1),
 }
 
 func init() {

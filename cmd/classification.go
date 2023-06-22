@@ -5,17 +5,16 @@ import (
 	"os"
 
 	"github.com/inode64/gotrackmaster/lib"
-	trackmaster "github.com/inode64/gotrackmaster/trackmaster"
+	"github.com/inode64/gotrackmaster/trackmaster"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
 var classificationCmd = &cobra.Command{
 	Use:   "classification",
-	Short: "Synchronize Media Data from track GPX",
-	Long:  `Using a gpx track, analyze a directory with images or movies and add the GPS positions`,
-	Args:  cobra.MinimumNArgs(0),
+	Short: "Classify a track according to the type of activity",
 	Run: func(cmd *cobra.Command, args []string) {
-		MExecute()
+		classificationExecute()
 	},
 }
 
@@ -23,7 +22,11 @@ func init() {
 	rootCmd.AddCommand(classificationCmd)
 }
 
-func MExecute() {
+func classificationExecute() {
+	if verbose {
+		trackmaster.Log.SetLevel(logrus.DebugLevel)
+	}
+
 	lib.ReadTracks(track, true)
 	lib.Pass("Processing tracks...")
 
