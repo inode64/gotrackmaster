@@ -110,7 +110,7 @@ func TimeQuality(g gpx.GPX) int {
 		for _, TrkSegType := range TrkType.TrkSeg {
 			var lastValidTime time.Time
 			for _, WptType := range TrkSegType.TrkPt {
-				if !WptType.Time.IsZero() {
+				if WptType.Time.IsZero() {
 					num++
 				}
 				if !lastValidTime.IsZero() && WptType.Time.Before(lastValidTime) {
