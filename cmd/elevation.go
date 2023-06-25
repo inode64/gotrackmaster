@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"strconv"
 
 	"github.com/inode64/gotrackmaster/lib"
 	"github.com/inode64/gotrackmaster/trackmaster"
@@ -56,10 +57,15 @@ func elevationExecute() {
 			fmt.Println(lib.ColorYellow("Warning: Elevation SRTM could not be processed, error: ", lib.ColorRed(err)))
 			continue
 		}
-		if int16(num) <= accuracy {
-			fmt.Printf("[%v] - %s\n", filename, lib.ColorGreen("updated"))
-		}
+		if int16(num) > accuracy {
+			fmt.Printf("[%v] - Accuracy %s\n", filename, lib.ColorGreen(num))
+		} else {
+			if !dryRun {
+				trackmaster.ElevationSRTM(*g)
 
-		fmt.Printf("[%v] - Accuracy %s\n", filename, lib.ColorGreen(num))
+				writeGPX(*g, filename)
+			}
+			fmt.Printf("[%v] - Accuracy %s\n", filename, lib.ColorRed(strconv.Itoa(num)+" (updated)"))
+		}
 	}
 }

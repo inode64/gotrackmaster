@@ -1,7 +1,12 @@
 package cmd
 
 import (
+	"encoding/xml"
+	"os"
+
+	"github.com/inode64/gotrackmaster/lib"
 	"github.com/spf13/cobra"
+	"github.com/twpayne/go-gpx"
 )
 
 var (
@@ -31,4 +36,25 @@ func init() {
 
 func Execute() {
 	cobra.CheckErr(rootCmd.Execute())
+}
+
+func writeGPX(g gpx.GPX, filename string) {
+	f, err := os.Create(filename)
+	if err != nil {
+		lib.Error(err.Error())
+		return
+	}
+	defer f.Close()
+
+	// write xml header
+	_, err = f.WriteString(xml.Header)
+	if err != nil {
+		lib.Error(err.Error())
+		return
+	}
+
+	if err := g.WriteIndent(f, "", "  "); err != nil {
+		lib.Error(err.Error())
+	}
+
 }
