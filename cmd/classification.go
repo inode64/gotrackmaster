@@ -2,11 +2,9 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/inode64/gotrackmaster/lib"
 	"github.com/inode64/gotrackmaster/trackmaster"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -23,16 +21,7 @@ func init() {
 }
 
 func classificationExecute() {
-	if verbose {
-		trackmaster.Log.SetLevel(logrus.DebugLevel)
-	}
-
-	lib.ReadTracks(track, true)
-	lib.Pass("Processing tracks...")
-
-	if len(lib.Tracks) == 0 {
-		os.Exit(1)
-	}
+	readTracks()
 
 	for _, filename := range lib.Tracks {
 		kind := trackmaster.ClassificationTrack(filename)

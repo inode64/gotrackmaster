@@ -7,7 +7,6 @@ import (
 
 	"github.com/inode64/gotrackmaster/lib"
 	"github.com/inode64/gotrackmaster/trackmaster"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/twpayne/go-gpx"
 )
@@ -27,16 +26,7 @@ func init() {
 }
 
 func elevationExecute() {
-	if verbose {
-		trackmaster.Log.SetLevel(logrus.DebugLevel)
-	}
-
-	lib.ReadTracks(track, true)
-	lib.Pass("Processing tracks...")
-
-	if len(lib.Tracks) == 0 {
-		os.Exit(1)
-	}
+	readTracks()
 
 	for _, filename := range lib.Tracks {
 		f, err := os.Open(filename)
