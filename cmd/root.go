@@ -5,6 +5,8 @@ import (
 	"os"
 
 	"github.com/inode64/gotrackmaster/lib"
+	"github.com/inode64/gotrackmaster/trackmaster"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/twpayne/go-gpx"
 )
@@ -39,6 +41,10 @@ func Execute() {
 }
 
 func writeGPX(g gpx.GPX, filename string) {
+	if dryRun {
+		return
+	}
+
 	f, err := os.Create(filename)
 	if err != nil {
 		lib.Error(err.Error())
@@ -56,5 +62,17 @@ func writeGPX(g gpx.GPX, filename string) {
 	if err := g.WriteIndent(f, "", "  "); err != nil {
 		lib.Error(err.Error())
 	}
+}
 
+func readTracks() {
+	if verbose {
+		trackmaster.Log.SetLevel(logrus.DebugLevel)
+	}
+
+	lib.ReadTracks(track, true)
+	lib.Pass("Processing tracks...")
+
+	if len(lib.Tracks) == 0 {
+		os.Exit(1)
+	}
 }
