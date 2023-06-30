@@ -2,7 +2,9 @@ package cmd
 
 import (
 	"encoding/xml"
+	"fmt"
 	"os"
+	"strconv"
 
 	"github.com/inode64/gotrackmaster/lib"
 	"github.com/inode64/gotrackmaster/trackmaster"
@@ -74,5 +76,31 @@ func readTracks() {
 
 	if len(lib.Tracks) == 0 {
 		os.Exit(1)
+	}
+}
+
+func readTrack(filename string) (gpx.GPX, error) {
+	f, err := os.Open(filename)
+	if err != nil {
+		fmt.Println(lib.ColorYellow("Warning: GPX file could not be processed, error: ", lib.ColorRed(err)))
+		return gpx.GPX{}, err
+	}
+	defer f.Close()
+
+	g, err := gpx.Read(f)
+	if err != nil {
+		fmt.Println(lib.ColorYellow("Warning: GPX file could not be processed, error: ", lib.ColorRed(err)))
+		return gpx.GPX{}, err
+	}
+
+	return *g, nil
+}
+
+func writeTrack(g gpx.GPX, filename string, result []trackmaster.GPXElementInfo) {
+	if len(result) == 0 {
+		fmt.Printf("[%v] - no updated need\n", filename)
+	} else {
+		writeGPX(g, filename)
+		fmt.Printf("[%v] - Fixing %s point(s)\n", filename, lib.ColorRed(strconv.Itoa(len(result))+" (updated)"))
 	}
 }
