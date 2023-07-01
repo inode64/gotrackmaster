@@ -20,7 +20,7 @@ func init() {
 	rootCmd.AddCommand(removeNoiseCmd)
 	removeNoiseCmd.Flags().Float64Var(&maxDistance, "maxdistance", 6.0, "set the maximum distance allowed within a stop")
 	removeNoiseCmd.Flags().Float64Var(&maxElevation, "maxelevation", 1.1, "set the maximum lift allowed within a stop")
-	removeNoiseCmd.Flags().IntVar(&minPoints, "maxpoints", 4.0, "set the maximum amount of points")
+	removeNoiseCmd.Flags().IntVar(&maxPoints, "maxpoints", 4, "set the maximum amount of points")
 }
 
 func removeNoiseExecute() {

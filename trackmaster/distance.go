@@ -308,7 +308,7 @@ func orientation(p, q, r gpx.WptType) int {
 }
 
 // CheckIntersecting - check intersecting segments.
-func CheckIntersecting(g gpx.GPX, max int, fix bool) []GPXElementInfo {
+func RemoveIntersections(g gpx.GPX, max int, fix bool) []GPXElementInfo {
 	var result []GPXElementInfo
 
 	for TrkTypeNo, TrkType := range g.Trk {

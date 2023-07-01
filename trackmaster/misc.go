@@ -146,10 +146,10 @@ func ClassificationTrack(filename string) string {
 	// We remove the stops of more than 90 seconds in less than 5 meters
 	_ = RemoveStops(*g, 30.0, 9.0, 8, 12, true)
 
-	CheckIntersecting(*g, 7, true)
-	CheckIntersecting(*g, 7, true)
-	CheckIntersecting(*g, 7, true)
-	CheckIntersecting(*g, 7, true)
+	RemoveIntersections(*g, 7, true)
+	RemoveIntersections(*g, 7, true)
+	RemoveIntersections(*g, 7, true)
+	RemoveIntersections(*g, 7, true)
 
 	num, err := ElevationSRTMAccuracy(*g)
 	if err != nil {

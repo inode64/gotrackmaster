@@ -6,8 +6,10 @@ fatih
 godem
 godirwalk
 gotrackmaster
+joinsegments
 karrick
 logrus
+lostelevation
 maxSpeed
 maxdistance
 maxelevation
@@ -19,11 +21,15 @@ mtype
 pedraforca
 prades
 removefirstnoise
+removeintersections
 removenoise
 removestops
 simplifypoints
 sirupsen
+smoothgaussiandistance
+smoothgaussianelevation
 stretchr
 trackmaster
 twpayne
 vasile
+windowsize
