@@ -16,7 +16,7 @@ var removeLastMaxSpeedCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(removeLastMaxSpeedCmd)
-	rootCmd.PersistentFlags().Float64Var(&maxSpeed, "maxspeed", 14.0, "set the maximum speed to remove from the end of the track")
+	removeLastMaxSpeedCmd.Flags().Float64Var(&maxSpeed, "maxspeed", 14.0, "set the maximum speed to remove from the end of the track")
 }
 
 func removeLastMaxSpeedExecute() {

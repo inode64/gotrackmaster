@@ -17,7 +17,7 @@ var maxSpeed float64
 
 func init() {
 	rootCmd.AddCommand(maxSpeedCmd)
-	rootCmd.PersistentFlags().Float64Var(&maxSpeed, "maxspeed", 200.0, "set the maximum speed to remove from track")
+	maxSpeedCmd.Flags().Float64Var(&maxSpeed, "maxspeed", 200.0, "set the maximum speed to remove from track")
 }
 
 func maxSpeedExecute() {

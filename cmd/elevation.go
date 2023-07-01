@@ -20,7 +20,7 @@ var accuracy int16
 
 func init() {
 	rootCmd.AddCommand(elevationCmd)
-	rootCmd.PersistentFlags().Int16Var(&accuracy, "accuracy", 60, "set the minimum accuracy to update the elevation")
+	elevationCmd.Flags().Int16Var(&accuracy, "accuracy", 60, "set the minimum accuracy to update the elevation")
 }
 
 func elevationExecute() {

@@ -19,7 +19,7 @@ var distance float64
 
 func init() {
 	rootCmd.AddCommand(simplifyPointsCmd)
-	rootCmd.PersistentFlags().Float64Var(&distance, "distance", 0.5, "set minimum distance of the points to join them")
+	simplifyPointsCmd.Flags().Float64Var(&distance, "distance", 0.5, "set minimum distance of the points to join them")
 }
 
 func simplifyPointsExecute() {
