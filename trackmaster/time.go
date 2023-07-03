@@ -3,6 +3,7 @@ package trackmaster
 import (
 	"time"
 
+	"github.com/ringsaturn/tzf"
 	gpx "github.com/twpayne/go-gpx"
 )
 
@@ -94,7 +95,7 @@ func TimeEmpty(g gpx.GPX) bool {
 	for _, TrkType := range g.Trk {
 		for _, TrkSegType := range TrkType.TrkSeg {
 			for _, WptType := range TrkSegType.TrkPt {
-				if !WptType.Time.IsZero() {
+				if timeValid(WptType.Time) {
 					return false
 				}
 			}
@@ -110,7 +111,7 @@ func TimeQuality(g gpx.GPX) int {
 		for _, TrkSegType := range TrkType.TrkSeg {
 			var lastValidTime time.Time
 			for _, WptType := range TrkSegType.TrkPt {
-				if WptType.Time.IsZero() {
+				if !timeValid(WptType.Time) {
 					num++
 				}
 				if !lastValidTime.IsZero() && WptType.Time.Before(lastValidTime) {
@@ -128,4 +129,45 @@ func TimeQuality(g gpx.GPX) int {
 		return -1
 	}
 	return 100 - (num * 100 / total)
+}
+
+func GetTimeStart(g gpx.GPX, finder tzf.F) time.Time {
+	for _, TrkType := range g.Trk {
+		for _, TrkSegType := range TrkType.TrkSeg {
+			for _, WptType := range TrkSegType.TrkPt {
+				if timeValid(WptType.Time) && WptType.Lat != 0 && WptType.Lon != 0 {
+					return UpdateGPSDateTime(WptType.Time, WptType.Lat, WptType.Lon, finder)
+				}
+			}
+		}
+	}
+	return time.Time{}
+}
+
+func timeValid(t time.Time) bool {
+	return !t.IsZero() && t.After(time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC)) && t.Before(time.Now())
+}
+
+func UpdateGPSDateTime(gpsDateTime time.Time, lat float64, lon float64, finder tzf.F) time.Time {
+	if lat == 0 && lon == 0 {
+		return gpsDateTime
+	}
+
+	zone := finder.GetTimezoneName(lon, lat)
+
+	if zone == "" {
+		return gpsDateTime
+	}
+
+	loc, err := time.LoadLocation(zone)
+	if err != nil {
+		return gpsDateTime
+	}
+
+	t := gpsDateTime.In(loc)
+
+	// remove timezone from time
+	t, _ = time.Parse("2006-01-02 15:04:05", t.Format("2006-01-02 15:04:05"))
+
+	return t
 }

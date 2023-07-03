@@ -1,10 +1,14 @@
 package trackmaster
 
 import (
+	"errors"
 	"math"
 	"os"
 
+	"github.com/codingsince1985/geo-golang"
+	"github.com/codingsince1985/geo-golang/openstreetmap"
 	"github.com/sirupsen/logrus"
+
 	gpx "github.com/twpayne/go-gpx"
 )
 
@@ -238,4 +242,20 @@ func ClassificationTrack(filename string) string {
 	}).Debug("Classification result")
 
 	return c
+}
+
+func GetLocationStart(g gpx.GPX) (geo.Address, error) {
+	for _, TrkType := range g.Trk {
+		for _, TrkSegType := range TrkType.TrkSeg {
+			for _, WptType := range TrkSegType.TrkPt {
+				if WptType.Lat != 0 && WptType.Lon != 0 {
+					service := openstreetmap.Geocoder()
+
+					address, err := service.ReverseGeocode(WptType.Lat, WptType.Lon)
+					return *address, err
+				}
+			}
+		}
+	}
+	return geo.Address{Country: "Missing", CountryCode: "XX", City: "Missing", State: "Missing"}, errors.New("No location found")
 }

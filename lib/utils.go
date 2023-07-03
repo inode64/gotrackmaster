@@ -80,12 +80,12 @@ func ReadTracks(track string, valid bool) {
 	}
 
 	if len(Tracks) == 0 {
-		Warning("There is no track processed")
+		Warning("There is no track processed\n")
 	}
 
 	if TrackError == 0 {
-		fmt.Printf(ColorGreen("Located %d track(s)"), TrackValid)
+		fmt.Printf(ColorGreen("Located %d track(s)\n"), TrackValid)
 	} else {
-		fmt.Printf(ColorYellow("Located %d track(s), %d with error(s)"), TrackValid, TrackError)
+		fmt.Printf(ColorYellow("Located %d track(s), %d with error(s)\n"), TrackValid, TrackError)
 	}
 }
