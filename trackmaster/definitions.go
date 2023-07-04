@@ -59,13 +59,3 @@ type Config struct {
 }
 
 var Log = logrus.New()
-
-/*
-func Init(config *Config) {
-	if config == nil {
-		config.LogLevel = logrus.WarnLevel
-	}
-
-	Log.SetLevel(config.LogLevel)
-}
-*/

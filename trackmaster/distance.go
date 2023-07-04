@@ -1,6 +1,7 @@
 package trackmaster
 
 import (
+	"fmt"
 	"math"
 
 	gpx "github.com/twpayne/go-gpx"
@@ -338,4 +339,86 @@ func RemoveIntersections(g gpx.GPX, max int, fix bool) []GPXElementInfo {
 		}
 	}
 	return result
+}
+
+// Get bounds of GPX.
+func GetBounds(g gpx.GPX) gpx.BoundsType {
+	var result gpx.BoundsType
+	result.MinLat = 90
+	result.MaxLat = -90
+	result.MinLon = 180
+	result.MaxLon = -180
+	for _, TrkType := range g.Trk {
+		for _, TrkSegType := range TrkType.TrkSeg {
+			for _, WptType := range TrkSegType.TrkPt {
+				if WptType.Lat < result.MinLat {
+					result.MinLat = WptType.Lat
+				}
+				if WptType.Lat > result.MaxLat {
+					result.MaxLat = WptType.Lat
+				}
+				if WptType.Lon < result.MinLon {
+					result.MinLon = WptType.Lon
+				}
+				if WptType.Lon > result.MaxLon {
+					result.MaxLon = WptType.Lon
+				}
+			}
+		}
+	}
+	return result
+}
+
+func IsBoundsValid(bounds gpx.BoundsType) bool {
+	return bounds.MaxLat != 90 || bounds.MinLat != -90 || bounds.MaxLon != 180 || bounds.MinLon != -180
+}
+
+func getLat2Coordinates(lat float64, degree float64) string {
+	northSouth := 'S'
+	if lat >= 0 {
+		northSouth = 'N'
+	}
+
+	latPart := math.Abs(math.Floor(lat/degree)) * degree
+
+	if degree < 1 {
+		return fmt.Sprintf("%s%02.1f", string(northSouth), latPart)
+	}
+	return fmt.Sprintf("%s%02.0f", string(northSouth), latPart)
+}
+
+func getLon2Coordinates(lon float64, degree float64) string {
+	eastWest := 'W'
+	if lon >= 0 {
+		eastWest = 'E'
+	}
+
+	lonPart := math.Abs(math.Floor(lon/degree)) * degree
+
+	if degree < 1 {
+		return fmt.Sprintf("%s%03.1f", string(eastWest), lonPart)
+	}
+	return fmt.Sprintf("%s%03.0f", string(eastWest), lonPart)
+}
+
+func CalculateTiles(coords gpx.BoundsType, degree float64) []string {
+	var tiles []string
+
+	lat1 := getLat2Coordinates(coords.MinLat, degree)
+	lon1 := getLon2Coordinates(coords.MinLon, degree)
+	lat2 := getLat2Coordinates(coords.MaxLat, degree)
+	lon2 := getLon2Coordinates(coords.MaxLon, degree)
+
+	tiles = append(tiles, lat1+lon1)
+	if lon1 != lon2 {
+		tiles = append(tiles, lat1+lon2)
+	}
+	if lat1 != lat2 {
+		tiles = append(tiles, lat2+lon1)
+	}
+	if lat1 != lat2 && lon1 != lon2 {
+		tiles = append(tiles, lat2+lon2)
+	}
+
+	return tiles
 }

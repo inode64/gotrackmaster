@@ -257,5 +257,5 @@ func GetLocationStart(g gpx.GPX) (geo.Address, error) {
 			}
 		}
 	}
-	return geo.Address{Country: "Missing", CountryCode: "XX", City: "Missing", State: "Missing"}, errors.New("No location found")
+	return geo.Address{Country: "Missing", CountryCode: "XX", City: "Missing", State: "Missing"}, errors.New("no location found")
 }

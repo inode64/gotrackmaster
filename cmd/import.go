@@ -42,7 +42,7 @@ func init() {
 	importCmd.Flags().StringVar(&archiveFormat, "archiveformat", "", "archive format for the tracks")
 }
 
-func customFormat(format string, t time.Time, address geo.Address) string {
+func customFormat(format string, t time.Time, address geo.Address, degree1 string, degree5 string) string {
 	result := format
 	result = strings.ReplaceAll(result, "{year}", fmt.Sprintf("%d", t.Year()))
 	result = strings.ReplaceAll(result, "{month}", fmt.Sprintf("%02d", t.Month()))
@@ -53,11 +53,13 @@ func customFormat(format string, t time.Time, address geo.Address) string {
 	result = strings.ReplaceAll(result, "{countrycode}", address.CountryCode)
 	result = strings.ReplaceAll(result, "{city}", address.City)
 	result = strings.ReplaceAll(result, "{state}", address.State)
+	result = strings.ReplaceAll(result, "{degree1}", degree1)
+	result = strings.ReplaceAll(result, "{degree0.5}", degree5)
 	return result
 }
 
 func isValidFormat(format string, t time.Time) bool {
-	result := customFormat(format, t, geo.Address{Country: "Germany", CountryCode: "DE", City: "Berlin", State: "Berlin"})
+	result := customFormat(format, t, geo.Address{Country: "Germany", CountryCode: "DE", City: "Berlin", State: "Berlin"}, "0", "0")
 
 	badCharMatch, _ := regexp.MatchString(`:|\\|\*|\?|"|<|>|\||\^`, format)
 
@@ -69,6 +71,36 @@ func isGeoAddress() bool {
 	a, _ := regexp.MatchString(`\{country\}|\{countrycode\}|\{city\}|\{state\}`, archiveFormat)
 
 	return a || d
+}
+
+func isDegree1() bool {
+	d, _ := regexp.MatchString(`\{degree1\}`, directoryFormat)
+	a, _ := regexp.MatchString(`\{degree1\}`, archiveFormat)
+
+	return a || d
+}
+
+func isDegree5() bool {
+	d, _ := regexp.MatchString(`\{degree0.5\}`, directoryFormat)
+	a, _ := regexp.MatchString(`\{degree0.5\}`, archiveFormat)
+
+	return a || d
+}
+
+func appendTrack(filename string, t time.Time, address geo.Address, gpx []ImportStructure, degree1 string, degree5 string) []ImportStructure {
+	e := ImportStructure{
+		source:    filename,
+		directory: customFormat(directoryFormat, t, address, degree1, degree5),
+		archive:   customFormat(archiveFormat, t, address, degree1, degree5),
+	}
+	for _, element := range gpx {
+		if element.directory == e.directory && element.archive == e.archive {
+			lib.Error("Duplicate track: " + filename + " == " + element.source)
+			continue
+		}
+	}
+
+	return append(gpx, e)
 }
 
 func importExecute() {
@@ -110,24 +142,33 @@ func importExecute() {
 		}
 		if isGeoAddress() {
 			address, err = trackmaster.GetLocationStart(g)
-			if err != nil {
-				continue
+		}
+		if isDegree1() || isDegree5() {
+			bounds := trackmaster.GetBounds(g)
+			if trackmaster.IsBoundsValid(bounds) {
+				degree1 := trackmaster.CalculateTiles(bounds, 1)
+				degree5 := trackmaster.CalculateTiles(bounds, 0.5)
+				if isDegree1() {
+					for _, element1 := range degree1 {
+						if isDegree5() {
+							for _, element5 := range degree5 {
+								importGPX = appendTrack(filename, t, address, importGPX, element1, element5)
+							}
+						} else {
+							importGPX = appendTrack(filename, t, address, importGPX, element1, "")
+						}
+					}
+				} else {
+					for _, element5 := range degree5 {
+						importGPX = appendTrack(filename, t, address, importGPX, "", element5)
+					}
+				}
+			} else {
+				importGPX = appendTrack(filename, t, address, importGPX, "", "")
 			}
+		} else {
+			importGPX = appendTrack(filename, t, address, importGPX, "", "")
 		}
-
-		e := ImportStructure{
-			source:    filename,
-			directory: customFormat(directoryFormat, t, address),
-			archive:   customFormat(archiveFormat, t, address),
-		}
-		for _, element := range importGPX {
-			if element.directory == e.directory && element.archive == e.archive {
-				lib.Error("Duplicate track: " + filename + " -> " + element.source)
-				continue
-			}
-		}
-
-		importGPX = append(importGPX, e)
 	}
 
 	lib.Pass("Moving tracks...")
