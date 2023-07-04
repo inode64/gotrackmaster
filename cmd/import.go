@@ -90,8 +90,9 @@ func isDegree5() bool {
 }
 
 func appendTrack(filename string, t time.Time, address geo.Address, gpx []ImportStructure, degree1 string, degree5 string) []ImportStructure {
-	extension := filepath.Ext(filename)
-	name := filename[:len(filename)-len(extension)]
+	file := filepath.Base(filename)
+	extension := filepath.Ext(file)
+	name := file[:len(file)-len(extension)]
 
 	e := ImportStructure{
 		source:    filename,
