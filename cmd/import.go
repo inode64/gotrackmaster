@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
@@ -42,7 +43,7 @@ func init() {
 	importCmd.Flags().StringVar(&archiveFormat, "archiveformat", "", "archive format for the tracks")
 }
 
-func customFormat(format string, t time.Time, address geo.Address, degree1 string, degree5 string) string {
+func customFormat(format string, t time.Time, address geo.Address, degree1 string, degree5 string, original string) string {
 	result := format
 	result = strings.ReplaceAll(result, "{year}", fmt.Sprintf("%d", t.Year()))
 	result = strings.ReplaceAll(result, "{month}", fmt.Sprintf("%02d", t.Month()))
@@ -55,11 +56,12 @@ func customFormat(format string, t time.Time, address geo.Address, degree1 strin
 	result = strings.ReplaceAll(result, "{state}", address.State)
 	result = strings.ReplaceAll(result, "{degree1}", degree1)
 	result = strings.ReplaceAll(result, "{degree0.5}", degree5)
+	result = strings.ReplaceAll(result, "{original}", original)
 	return result
 }
 
 func isValidFormat(format string, t time.Time) bool {
-	result := customFormat(format, t, geo.Address{Country: "Germany", CountryCode: "DE", City: "Berlin", State: "Berlin"}, "0", "0")
+	result := customFormat(format, t, geo.Address{Country: "Germany", CountryCode: "DE", City: "Berlin", State: "Berlin"}, "0", "0", "original")
 
 	badCharMatch, _ := regexp.MatchString(`:|\\|\*|\?|"|<|>|\||\^`, format)
 
@@ -88,10 +90,13 @@ func isDegree5() bool {
 }
 
 func appendTrack(filename string, t time.Time, address geo.Address, gpx []ImportStructure, degree1 string, degree5 string) []ImportStructure {
+	extension := filepath.Ext(filename)
+	name := filename[:len(filename)-len(extension)]
+
 	e := ImportStructure{
 		source:    filename,
-		directory: customFormat(directoryFormat, t, address, degree1, degree5),
-		archive:   customFormat(archiveFormat, t, address, degree1, degree5),
+		directory: customFormat(directoryFormat, t, address, degree1, degree5, name),
+		archive:   customFormat(archiveFormat, t, address, degree1, degree5, name),
 	}
 	for _, element := range gpx {
 		if element.directory == e.directory && element.archive == e.archive {
