@@ -274,3 +274,90 @@ func geoNameCleanup(input string) string {
 	repl := strings.NewReplacer("/", "_", ":", "_", "\\", "_", ".", "_")
 	return repl.Replace(strings.TrimSpace(input))
 }
+
+func Creator(g gpx.GPX) string {
+	creator := "Unknown"
+	if g.Creator != "" {
+		if strings.Contains(g.Creator, "Garmin") {
+			creator = "Garmin"
+		} else if strings.Contains(g.Creator, "Strava") {
+			creator = "Strava"
+		} else if strings.Contains(g.Creator, "eTrex") {
+			creator = "Garmin"
+		} else if strings.Contains(g.Creator, "Runkeeper") {
+			creator = "Runkeeper"
+		} else if strings.Contains(g.Creator, "Endomondo") {
+			creator = "Endomondo"
+		} else if strings.Contains(g.Creator, "Runtastic") {
+			creator = "Runtastic"
+		} else if strings.Contains(g.Creator, "Polar") {
+			creator = "Polar"
+		} else if strings.Contains(g.Creator, "TomTom") {
+			creator = "TomTom"
+		} else if strings.Contains(g.Creator, "Suunto") {
+			creator = "Suunto"
+		} else if strings.Contains(g.Creator, "Movescount") {
+			creator = "Suunto"
+		} else if strings.Contains(g.Creator, "Fitbit") {
+			creator = "Fitbit"
+		} else if strings.Contains(g.Creator, "Wahoo") {
+			creator = "Wahoo"
+		} else if strings.Contains(g.Creator, "Bryton") {
+			creator = "Bryton"
+		} else if strings.Contains(g.Creator, "Cateye") {
+			creator = "Cateye"
+		} else if strings.Contains(g.Creator, "Coros") {
+			creator = "Coros"
+		} else if strings.Contains(g.Creator, "Hammerhead") {
+			creator = "Hammerhead"
+		} else if strings.Contains(g.Creator, "Lezyne") {
+			creator = "Lezyne"
+		} else if strings.Contains(g.Creator, "Mio") {
+			creator = "Mio"
+		} else if strings.Contains(g.Creator, "Sigma") {
+			creator = "Sigma"
+		} else if strings.Contains(g.Creator, "Stages") {
+			creator = "Stages"
+		} else if strings.Contains(g.Creator, "Tacx") {
+			creator = "Tacx"
+		} else if strings.Contains(g.Creator, "Timex") {
+			creator = "Timex"
+		} else if strings.Contains(g.Creator, "Wahoo") {
+			creator = "Wahoo"
+		} else if strings.Contains(g.Creator, "Xplova") {
+			creator = "Xplova"
+		} else if strings.Contains(g.Creator, "Zwift") {
+			creator = "Zwift"
+		} else if strings.Contains(g.Creator, "Wikiloc") {
+			creator = "Wikiloc"
+		} else if strings.Contains(g.Creator, "GPSBabel") {
+			creator = "GPSBabel"
+		} else if strings.Contains(g.Creator, "OruxMaps") {
+			creator = g.Creator
+		} else if strings.Contains(g.Creator, "Locus") {
+			creator = "Locus"
+		} else if strings.Contains(g.Creator, "Viking") {
+			creator = "Viking"
+		} else if strings.Contains(g.Creator, "OsmAnd") {
+			creator = "OsmAnd"
+		} else if strings.Contains(g.Creator, "AllTrails") {
+			creator = "AllTrails"
+		} else if strings.Contains(g.Creator, "ExifTool") {
+			creator = "ExifTool"
+		} else if strings.Contains(g.Creator, "togpx") {
+			creator = "ToGPX"
+		} else if strings.Contains(g.Creator, "OziExplorer") {
+			creator = "OziExplorer"
+		} else if strings.Contains(g.Creator, "Graphhopper") {
+			creator = "Graphhopper"
+		} else if strings.Contains(g.Creator, "Google") {
+			creator = "Google"
+		} else if strings.Contains(g.Creator, "nawagers") {
+			creator = "Nawagers"
+		} else if strings.Contains(g.Creator, "Mapas de España") {
+			creator = "OruxMaps"
+		}
+	}
+
+	return creator
+}
