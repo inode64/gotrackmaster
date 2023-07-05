@@ -43,7 +43,7 @@ func init() {
 	importCmd.Flags().StringVar(&archiveFormat, "archiveformat", "", "archive format for the tracks")
 }
 
-func customFormat(format string, t time.Time, address geo.Address, degree1 string, degree5 string, original string) string {
+func customFormat(format string, t time.Time, address geo.Address, degree1 string, degree5 string, original string, kind string) string {
 	result := format
 	result = strings.ReplaceAll(result, "{year}", fmt.Sprintf("%d", t.Year()))
 	result = strings.ReplaceAll(result, "{month}", fmt.Sprintf("%02d", t.Month()))
@@ -57,11 +57,12 @@ func customFormat(format string, t time.Time, address geo.Address, degree1 strin
 	result = strings.ReplaceAll(result, "{degree1}", degree1)
 	result = strings.ReplaceAll(result, "{degree0.5}", degree5)
 	result = strings.ReplaceAll(result, "{original}", original)
+	result = strings.ReplaceAll(result, "{kind}", kind)
 	return result
 }
 
 func isValidFormat(format string, t time.Time) bool {
-	result := customFormat(format, t, geo.Address{Country: "Germany", CountryCode: "DE", City: "Berlin", State: "Berlin"}, "0", "0", "original")
+	result := customFormat(format, t, geo.Address{Country: "Germany", CountryCode: "DE", City: "Berlin", State: "Berlin"}, "0", "0", "original", "trail running")
 
 	badCharMatch, _ := regexp.MatchString(`:|\\|\*|\?|"|<|>|\||\^`, format)
 
@@ -93,11 +94,12 @@ func appendTrack(filename string, t time.Time, address geo.Address, gpx []Import
 	file := filepath.Base(filename)
 	extension := filepath.Ext(file)
 	name := file[:len(file)-len(extension)]
+	kind := trackmaster.ClassificationTrack(filename)
 
 	e := ImportStructure{
 		source:    filename,
-		directory: customFormat(directoryFormat, t, address, degree1, degree5, name),
-		archive:   customFormat(archiveFormat, t, address, degree1, degree5, name),
+		directory: customFormat(directoryFormat, t, address, degree1, degree5, name, kind),
+		archive:   customFormat(archiveFormat, t, address, degree1, degree5, name, kind),
 	}
 	for _, element := range gpx {
 		if element.directory == e.directory && element.archive == e.archive {
