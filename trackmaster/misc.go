@@ -4,6 +4,7 @@ import (
 	"errors"
 	"math"
 	"os"
+	"strings"
 
 	"github.com/codingsince1985/geo-golang"
 	"github.com/codingsince1985/geo-golang/openstreetmap"
@@ -252,10 +253,24 @@ func GetLocationStart(g gpx.GPX) (geo.Address, error) {
 					service := openstreetmap.Geocoder()
 
 					address, err := service.ReverseGeocode(WptType.Lat, WptType.Lon)
+					if err != nil {
+						goto next
+					}
+					// cleanup the address
+					address.Country = geoNameCleanup(address.Country)
+					address.City = geoNameCleanup(address.City)
+					address.State = geoNameCleanup(address.State)
+
 					return *address, err
 				}
 			}
 		}
 	}
+next:
 	return geo.Address{Country: "Missing", CountryCode: "XX", City: "Missing", State: "Missing"}, errors.New("no location found")
+}
+
+func geoNameCleanup(input string) string {
+	repl := strings.NewReplacer("/", "_", ":", "_", "\\", "_", ".", "_")
+	return repl.Replace(strings.TrimSpace(input))
 }
