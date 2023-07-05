@@ -275,7 +275,7 @@ func geoNameCleanup(input string) string {
 	return repl.Replace(strings.TrimSpace(input))
 }
 
-func Creator(g gpx.GPX) string {
+func GetCreator(g gpx.GPX) string {
 	creator := "Unknown"
 	if g.Creator != "" {
 		if strings.Contains(g.Creator, "Garmin") {
