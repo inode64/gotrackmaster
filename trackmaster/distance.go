@@ -422,3 +422,30 @@ func CalculateTiles(coords gpx.BoundsType, degree float64) []string {
 
 	return tiles
 }
+
+func GetPositionStart(g gpx.GPX) gpx.WptType {
+	for _, TrkType := range g.Trk {
+		for _, TrkSegType := range TrkType.TrkSeg {
+			for _, WptType := range TrkSegType.TrkPt {
+				if WptType.Lat != 0 && WptType.Lon != 0 {
+					return *WptType
+				}
+			}
+		}
+	}
+	return gpx.WptType{}
+}
+
+func GetPositionEnd(g gpx.GPX) gpx.WptType {
+	for _, TrkType := range g.Trk {
+		for _, TrkSegType := range TrkType.TrkSeg {
+			for i := len(TrkSegType.TrkPt) - 1; i >= 0; i-- {
+				WptType := TrkSegType.TrkPt[i]
+				if WptType.Lat != 0 && WptType.Lon != 0 {
+					return *WptType
+				}
+			}
+		}
+	}
+	return gpx.WptType{}
+}

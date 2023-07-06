@@ -144,6 +144,20 @@ func GetTimeStart(g gpx.GPX, finder tzf.F) time.Time {
 	return time.Time{}
 }
 
+func GetTimeEnd(g gpx.GPX, finder tzf.F) time.Time {
+	var lastValidTime time.Time
+	for _, TrkType := range g.Trk {
+		for _, TrkSegType := range TrkType.TrkSeg {
+			for _, WptType := range TrkSegType.TrkPt {
+				if timeValid(WptType.Time) && WptType.Lat != 0 && WptType.Lon != 0 {
+					lastValidTime = UpdateGPSDateTime(WptType.Time, WptType.Lat, WptType.Lon, finder)
+				}
+			}
+		}
+	}
+	return lastValidTime
+}
+
 func timeValid(t time.Time) bool {
 	return !t.IsZero() && t.After(time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC)) && t.Before(time.Now())
 }
