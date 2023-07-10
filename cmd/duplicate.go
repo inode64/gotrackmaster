@@ -19,13 +19,16 @@ var duplicateCmd = &cobra.Command{
 	},
 }
 
-type DuplicateStructure struct {
+type duplicateStructure struct {
 	startTime time.Time
 	endTime   time.Time
 	startLat  float64
 	startLon  float64
 	endLat    float64
 	endLon    float64
+	quality   float64
+	creator   string
+	filename  string
 }
 
 var (
@@ -51,8 +54,16 @@ func checkTime(t, d time.Time, sec int) bool {
 	return t.After(d.Add(time.Duration(-sec)*time.Second)) && t.Before(d.Add(time.Duration(sec)*time.Second))
 }
 
-func CheckPosition(lat1, lon1, lat2, lon2 float64, distance int) bool {
+func checkPosition(lat1, lon1, lat2, lon2 float64, distance int) bool {
 	return trackmaster.HaversineDistance(lat1, lon1, lat2, lon2) < float64(distance)
+}
+
+func showDuplicate(d duplicateStructure, status string) {
+	lib.Error(fmt.Sprintf("Duplicate found: %v [%v]", showNameTrack(d.filename, d.creator, d.quality), status))
+}
+
+func showNameTrack(filename, creator string, quality float64) string {
+	return fmt.Sprintf("%v (%s/%0.0f)", filename, creator, quality)
 }
 
 func duplicateExecute() {
@@ -72,6 +83,10 @@ func duplicateExecute() {
 		lib.Error("End distance must be positive")
 		os.Exit(1)
 	}
+	if startDiff == 0 && endDiff == 0 && startDistance == 0 && endDistance == 0 {
+		lib.Error("You must specify at least one rule")
+		os.Exit(1)
+	}
 
 	finder, err := tzf.NewDefaultFinder()
 	if err != nil {
@@ -81,7 +96,7 @@ func duplicateExecute() {
 
 	readTracks()
 
-	var duplicateGPX []DuplicateStructure
+	var duplicateGPX []duplicateStructure
 
 	for _, filename := range lib.Tracks {
 		g, err := readTrack(filename)
@@ -89,7 +104,10 @@ func duplicateExecute() {
 			continue
 		}
 
-		fmt.Printf("Getting info from: %v\n", filename)
+		quality := trackmaster.QualityTrack(g)
+		creator := trackmaster.GetCreator(g)
+
+		fmt.Printf("Getting info from: %v\n", showNameTrack(filename, creator, quality))
 
 		ts := trackmaster.GetTimeStart(g, finder)
 		te := trackmaster.GetTimeEnd(g, finder)
@@ -111,51 +129,48 @@ func duplicateExecute() {
 			for _, d := range duplicateGPX {
 				if checkTime(ts, d.startTime, startDiff) {
 					if timeComparator && endDiff != 0 && checkTime(te, d.endTime, endDiff) {
-						fmt.Printf("Duplicate found: %v [start and end time]\n", filename)
-						continue
+						showDuplicate(d, "start and end time")
 					} else {
-						fmt.Printf("Duplicate found: %v [start time]\n", filename)
-						continue
+						showDuplicate(d, "start time")
 					}
 				}
 			}
 		} else if endDiff != 0 {
 			for _, d := range duplicateGPX {
 				if checkTime(te, d.endTime, endDiff) {
-					fmt.Printf("Duplicate found: %v [end time]\\n", filename)
-					continue
+					showDuplicate(d, "end time")
 				}
 			}
 		}
 
 		if startDistance != 0 {
 			for _, d := range duplicateGPX {
-				if CheckPosition(ps.Lat, ps.Lon, d.startLat, d.startLon, startDistance) {
-					if distanceComparator && endDistance != 0 && CheckPosition(pe.Lat, pe.Lon, d.endLat, d.endLon, endDistance) {
-						fmt.Printf("Duplicate found: %v [start and end position]\n", filename)
-						continue
+				if checkPosition(ps.Lat, ps.Lon, d.startLat, d.startLon, startDistance) {
+					if distanceComparator && endDistance != 0 && checkPosition(pe.Lat, pe.Lon, d.endLat, d.endLon, endDistance) {
+						showDuplicate(d, "start and end position")
 					} else {
-						fmt.Printf("Duplicate found: %v [start position]\n", filename)
-						continue
+						showDuplicate(d, "start position")
 					}
 				}
 			}
 		} else if endDistance != 0 {
 			for _, d := range duplicateGPX {
-				if CheckPosition(pe.Lat, pe.Lon, d.endLat, d.endLon, endDistance) {
-					fmt.Printf("Duplicate found: %v [end position]\n", filename)
-					continue
+				if checkPosition(pe.Lat, pe.Lon, d.endLat, d.endLon, endDistance) {
+					showDuplicate(d, "end position")
 				}
 			}
 		}
 
-		duplicateGPX = append(duplicateGPX, DuplicateStructure{
+		duplicateGPX = append(duplicateGPX, duplicateStructure{
 			startTime: ts,
 			endTime:   te,
 			startLat:  ps.Lat,
 			startLon:  ps.Lon,
 			endLat:    pe.Lat,
 			endLon:    pe.Lon,
+			quality:   quality,
+			creator:   creator,
+			filename:  filename,
 		})
 	}
 }
