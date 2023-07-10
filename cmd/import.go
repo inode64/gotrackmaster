@@ -33,7 +33,6 @@ var (
 	destination     string
 	directoryFormat string
 	archiveFormat   string
-	finder          tzf.F
 )
 
 func init() {
@@ -164,7 +163,7 @@ func importExecute() {
 			quality = trackmaster.QualityTrack(g)
 		}
 		if isGeoAddress() {
-			address, err = trackmaster.GetLocationStart(g)
+			address, _ = trackmaster.GetLocationStart(g)
 		}
 		if isDegree1() || isDegree5() {
 			bounds := trackmaster.GetBounds(g)

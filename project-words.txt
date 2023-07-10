@@ -7,6 +7,7 @@ Coros
 countrycode
 creu
 directoryformat
+enddiff
 Endomondo
 España
 Exif
@@ -50,6 +51,7 @@ sirupsen
 smoothgaussiandistance
 smoothgaussianelevation
 SRTM
+startdiff
 Strava
 stretchr
 Suunto

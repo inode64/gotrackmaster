@@ -39,6 +39,8 @@ var (
 	timeComparator     bool
 	distanceComparator bool
 	dup                int
+	del                int
+	delete             bool
 )
 
 func init() {
@@ -49,6 +51,7 @@ func init() {
 	duplicateCmd.Flags().IntVar(&endDistance, "endDistance", 0, "Distance in meters from the end position of the track to determine if they are duplicates (set 0 to not use this rule)")
 	duplicateCmd.Flags().BoolVar(&timeComparator, "timeComparator", false, "Takes time start and end to determine if they are duplicates")
 	duplicateCmd.Flags().BoolVar(&distanceComparator, "distanceComparator", false, "Requires distance start and end to determine if they are duplicates")
+	duplicateCmd.Flags().BoolVar(&delete, "delete", false, "Delete duplicate only when equal creator and quality of track")
 }
 
 func checkTime(t, d time.Time, sec int) bool {
@@ -59,9 +62,18 @@ func checkPosition(lat1, lon1, lat2, lon2 float64, distance int) bool {
 	return trackmaster.HaversineDistance(lat1, lon1, lat2, lon2) < float64(distance)
 }
 
-func showDuplicate(d duplicateStructure, status string) {
+func showDuplicate(d, new duplicateStructure, status string) bool {
 	lib.Error(fmt.Sprintf("Duplicate found: %v [%v]", showNameTrack(d.filename, d.creator, d.quality), status))
 	dup++
+	if delete && d.creator == new.creator && d.quality == new.quality {
+		del++
+		lib.Info(fmt.Sprintf("Deleting %v", d.filename))
+		if !dryRun {
+			os.Remove(d.filename)
+			return true
+		}
+	}
+	return false
 }
 
 func showNameTrack(filename, creator string, quality float64) string {
@@ -126,44 +138,7 @@ func duplicateExecute() {
 			continue
 		}
 
-		// check if start time is same other track with margin of startDiff
-		if startDiff != 0 {
-			for _, d := range duplicateGPX {
-				if checkTime(ts, d.startTime, startDiff) {
-					if timeComparator && endDiff != 0 && checkTime(te, d.endTime, endDiff) {
-						showDuplicate(d, "start and end time")
-					} else {
-						showDuplicate(d, "start time")
-					}
-				}
-			}
-		} else if endDiff != 0 {
-			for _, d := range duplicateGPX {
-				if checkTime(te, d.endTime, endDiff) {
-					showDuplicate(d, "end time")
-				}
-			}
-		}
-
-		if startDistance != 0 {
-			for _, d := range duplicateGPX {
-				if checkPosition(ps.Lat, ps.Lon, d.startLat, d.startLon, startDistance) {
-					if distanceComparator && endDistance != 0 && checkPosition(pe.Lat, pe.Lon, d.endLat, d.endLon, endDistance) {
-						showDuplicate(d, "start and end position")
-					} else {
-						showDuplicate(d, "start position")
-					}
-				}
-			}
-		} else if endDistance != 0 {
-			for _, d := range duplicateGPX {
-				if checkPosition(pe.Lat, pe.Lon, d.endLat, d.endLon, endDistance) {
-					showDuplicate(d, "end position")
-				}
-			}
-		}
-
-		duplicateGPX = append(duplicateGPX, duplicateStructure{
+		new := duplicateStructure{
 			startTime: ts,
 			endTime:   te,
 			startLat:  ps.Lat,
@@ -173,7 +148,60 @@ func duplicateExecute() {
 			quality:   quality,
 			creator:   creator,
 			filename:  filename,
-		})
+		}
+
+		// check if start time is same other track with margin of startDiff
+		if startDiff != 0 {
+			for _, d := range duplicateGPX {
+				if checkTime(ts, d.startTime, startDiff) {
+					if timeComparator && endDiff != 0 && checkTime(te, d.endTime, endDiff) {
+						if showDuplicate(d, new, "start and end time") {
+							goto next
+						}
+					} else {
+						if showDuplicate(d, new, "start time") {
+							goto next
+						}
+					}
+				}
+			}
+		} else if endDiff != 0 {
+			for _, d := range duplicateGPX {
+				if checkTime(te, d.endTime, endDiff) {
+					if showDuplicate(d, new, "end time") {
+						goto next
+					}
+				}
+			}
+		}
+
+		if startDistance != 0 {
+			for _, d := range duplicateGPX {
+				if checkPosition(ps.Lat, ps.Lon, d.startLat, d.startLon, startDistance) {
+					if distanceComparator && endDistance != 0 && checkPosition(pe.Lat, pe.Lon, d.endLat, d.endLon, endDistance) {
+						if showDuplicate(d, new, "start and end position") {
+							goto next
+						}
+					} else {
+						if showDuplicate(d, new, "start position") {
+							goto next
+						}
+					}
+				}
+			}
+		} else if endDistance != 0 {
+			for _, d := range duplicateGPX {
+				if checkPosition(pe.Lat, pe.Lon, d.endLat, d.endLon, endDistance) {
+					if showDuplicate(d, new, "end position") {
+						goto next
+					}
+				}
+			}
+		}
+
+		duplicateGPX = append(duplicateGPX, new)
+	next:
 	}
-	lib.Pass(fmt.Sprintf("Find duplicated %d tracks", dup))
+	lib.Pass(fmt.Sprintf("Found %d duplicate tracks", dup))
+	lib.Pass(fmt.Sprintf("Deleted %d duplicate tracks", del))
 }
