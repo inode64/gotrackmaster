@@ -379,7 +379,7 @@ func getLat2Coordinates(lat float64, degree float64) string {
 		northSouth = 'N'
 	}
 
-	latPart := math.Abs(math.Floor(lat/degree)) * degree
+	latPart := math.Abs(math.Round(lat/degree)) * degree
 
 	if degree < 1 {
 		return fmt.Sprintf("%s%02.1f", string(northSouth), latPart)
@@ -393,7 +393,7 @@ func getLon2Coordinates(lon float64, degree float64) string {
 		eastWest = 'E'
 	}
 
-	lonPart := math.Abs(math.Floor(lon/degree)) * degree
+	lonPart := math.Abs(math.Round(lon/degree)) * degree
 
 	if degree < 1 {
 		return fmt.Sprintf("%s%03.1f", string(eastWest), lonPart)
