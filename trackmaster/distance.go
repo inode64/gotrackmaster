@@ -449,3 +449,48 @@ func GetPositionEnd(g gpx.GPX) gpx.WptType {
 	}
 	return gpx.WptType{}
 }
+
+func DistanceQuality(g gpx.GPX) float64 {
+	var distance float64
+	var quality float64 = 100
+	var num int
+
+	for _, TrkType := range g.Trk {
+		for _, TrkSegType := range TrkType.TrkSeg {
+			for i := 0; i < len(TrkSegType.TrkPt)-1; i++ {
+				distance += Distance2D(*TrkSegType.TrkPt[i], *TrkSegType.TrkPt[i+1])
+			}
+			num += len(TrkSegType.TrkPt)
+		}
+	}
+
+	// check if points are very far away from each other
+	step := distance / float64(num)
+	if step > 30 {
+		quality -= 12
+	}
+	if step > 8 {
+		quality -= 6
+	}
+
+	// check intersections
+	result := RemoveIntersections(g, 5, false)
+	quality -= float64(len(result)) * 0.6
+
+	// check first noise
+	result = RemoveFirstNoise(g, false)
+	quality -= float64(len(result)) * 0.3
+
+	// check close points
+	result = RemoveStops(g, 0.0, .5, math.MaxFloat64, 0, false)
+	quality -= float64(len(result)) * 0.2
+
+	// check high noise
+	result = RemoveNoise(g, 6, 1.1, 4, false)
+	quality -= float64(len(result)) * 0.4
+
+	if quality < 0 {
+		quality = 0
+	}
+	return quality
+}
