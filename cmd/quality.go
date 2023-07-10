@@ -24,7 +24,11 @@ func qualityExecute() {
 	readTracks()
 
 	for _, filename := range lib.Tracks {
-		quality := trackmaster.QualityTrack(filename)
+		g, err := readTrack(filename)
+		if err != nil {
+			continue
+		}
+		quality := trackmaster.QualityTrack(g)
 		fmt.Printf("[%v] - %s\n", filename, lib.ColorGreen(quality))
 	}
 }

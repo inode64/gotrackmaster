@@ -362,21 +362,10 @@ func GetCreator(g gpx.GPX) string {
 	return creator
 }
 
-func QualityTrack(filename string) float64 {
-	f, err := os.Open(filename)
-	if err != nil {
-		return 0.0
-	}
-	defer f.Close()
-
-	g, err := gpx.Read(f)
-	if err != nil {
-		return 0.0
-	}
-
-	t := TimeQuality(*g)
-	e, _ := ElevationSRTMAccuracy(*g)
-	d := DistanceQuality(*g)
+func QualityTrack(g gpx.GPX) float64 {
+	t := TimeQuality(g)
+	e, _ := ElevationSRTMAccuracy(g)
+	d := DistanceQuality(g)
 
 	Log.WithFields(logrus.Fields{
 		"Time":      t,
