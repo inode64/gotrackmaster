@@ -38,6 +38,7 @@ var (
 	endDistance        int
 	timeComparator     bool
 	distanceComparator bool
+	dup                int
 )
 
 func init() {
@@ -60,6 +61,7 @@ func checkPosition(lat1, lon1, lat2, lon2 float64, distance int) bool {
 
 func showDuplicate(d duplicateStructure, status string) {
 	lib.Error(fmt.Sprintf("Duplicate found: %v [%v]", showNameTrack(d.filename, d.creator, d.quality), status))
+	dup++
 }
 
 func showNameTrack(filename, creator string, quality float64) string {
@@ -173,4 +175,5 @@ func duplicateExecute() {
 			filename:  filename,
 		})
 	}
+	lib.Pass(fmt.Sprintf("Find duplicated %d tracks", dup))
 }
