@@ -14,10 +14,12 @@ var removeStopsCmd = &cobra.Command{
 	},
 }
 
-var minSeconds float64
-var minPoints int
-var maxElevation float64
-var maxDistance float64
+var (
+	minSeconds   float64
+	minPoints    int
+	maxElevation float64
+	maxDistance  float64
+)
 
 func init() {
 	rootCmd.AddCommand(removeStopsCmd)

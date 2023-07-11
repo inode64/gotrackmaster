@@ -162,7 +162,7 @@ func timeValid(t time.Time) bool {
 	return !t.IsZero() && t.After(time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC)) && t.Before(time.Now())
 }
 
-func UpdateGPSDateTime(gpsDateTime time.Time, lat float64, lon float64, finder tzf.F) time.Time {
+func UpdateGPSDateTime(gpsDateTime time.Time, lat, lon float64, finder tzf.F) time.Time {
 	if lat == 0 && lon == 0 {
 		return gpsDateTime
 	}

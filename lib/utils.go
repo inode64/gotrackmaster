@@ -2,6 +2,7 @@ package lib
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"os"
 
@@ -16,7 +17,7 @@ var (
 	TrackError int
 )
 
-func ReadGPX(filename string, valid bool) {
+func ReadGPX(filename string) {
 	mtype, err := mimetype.DetectFile(filename)
 	if err != nil {
 		log.Fatal(ColorRed(err))
@@ -47,14 +48,14 @@ func ReadGPX(filename string, valid bool) {
 	TrackValid++
 }
 
-func ReadGPXDir(trackDir string, valid bool) {
+func ReadGPXDir(trackDir string) {
 	err := godirwalk.Walk(trackDir, &godirwalk.Options{
 		Callback: func(path string, de *godirwalk.Dirent) error {
 			if de.IsDir() {
 				return nil // do not remove directory that was provided top-level directory
 			}
 
-			ReadGPX(path, valid)
+			ReadGPX(path)
 
 			return nil
 		},
@@ -65,7 +66,7 @@ func ReadGPXDir(trackDir string, valid bool) {
 	}
 }
 
-func ReadTracks(track string, valid bool) {
+func ReadTracks(track string) {
 	fileInfo, err := os.Stat(track)
 	if err != nil {
 		log.Fatal(ColorRed("No open GPX path"))
@@ -74,9 +75,9 @@ func ReadTracks(track string, valid bool) {
 	Pass("Reading tracks...")
 
 	if fileInfo.IsDir() {
-		ReadGPXDir(track, valid)
+		ReadGPXDir(track)
 	} else {
-		ReadGPX(track, valid)
+		ReadGPX(track)
 	}
 
 	if len(Tracks) == 0 {
@@ -87,5 +88,24 @@ func ReadTracks(track string, valid bool) {
 		fmt.Printf(ColorGreen("Located %d track(s)\n"), TrackValid)
 	} else {
 		fmt.Printf(ColorYellow("Located %d track(s), %d with error(s)\n"), TrackValid, TrackError)
+	}
+}
+
+func CopyFile(src, dst string) {
+	srcFile, err := os.Open(src)
+	if err != nil {
+		log.Print(ColorRed(err))
+	}
+	defer srcFile.Close()
+
+	dstFile, err := os.Create(dst)
+	if err != nil {
+		log.Print(ColorRed(err))
+	}
+	defer dstFile.Close()
+
+	_, err = io.Copy(dstFile, srcFile)
+	if err != nil {
+		log.Print(ColorRed(err))
 	}
 }

@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"log"
 	"strconv"
 
 	"github.com/inode64/gotrackmaster/lib"
@@ -41,7 +42,10 @@ func elevationExecute() {
 			fmt.Printf("[%v] - Accuracy %s\n", filename, lib.ColorGreen(num))
 		} else {
 			if !dryRun {
-				trackmaster.ElevationSRTM(g)
+				err := trackmaster.ElevationSRTM(g)
+				if err != nil {
+					log.Fatal(lib.ColorRed(err))
+				}
 
 				writeGPX(g, filename)
 			}

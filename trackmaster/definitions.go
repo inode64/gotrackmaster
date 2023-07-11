@@ -1,6 +1,8 @@
 package trackmaster
 
 import (
+	"errors"
+
 	"github.com/sirupsen/logrus"
 	gpx "github.com/twpayne/go-gpx"
 )
@@ -59,3 +61,5 @@ type Config struct {
 }
 
 var Log = logrus.New()
+
+var ErrNoLocation = errors.New("no location found")

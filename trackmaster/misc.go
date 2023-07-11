@@ -1,7 +1,6 @@
 package trackmaster
 
 import (
-	"errors"
 	"math"
 	"os"
 	"strings"
@@ -9,7 +8,6 @@ import (
 	"github.com/codingsince1985/geo-golang"
 	"github.com/codingsince1985/geo-golang/openstreetmap"
 	"github.com/sirupsen/logrus"
-
 	gpx "github.com/twpayne/go-gpx"
 )
 
@@ -267,7 +265,7 @@ func GetLocationStart(g gpx.GPX) (geo.Address, error) {
 		}
 	}
 next:
-	return geo.Address{Country: "Missing", CountryCode: "XX", City: "Missing", State: "Missing"}, errors.New("no location found")
+	return geo.Address{Country: "Missing", CountryCode: "XX", City: "Missing", State: "Missing"}, ErrNoLocation
 }
 
 func geoNameCleanup(input string) string {

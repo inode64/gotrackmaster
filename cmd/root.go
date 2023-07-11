@@ -70,7 +70,7 @@ func readTracks() {
 	if verbose {
 		trackmaster.Log.SetLevel(logrus.DebugLevel)
 	}
-	lib.ReadTracks(track, true)
+	lib.ReadTracks(track)
 	if len(lib.Tracks) == 0 {
 		lib.Error("No tracks found")
 		os.Exit(1)

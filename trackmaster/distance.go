@@ -373,7 +373,7 @@ func IsBoundsValid(bounds gpx.BoundsType) bool {
 	return bounds.MaxLat != 90 || bounds.MinLat != -90 || bounds.MaxLon != 180 || bounds.MinLon != -180
 }
 
-func getLat2Coordinates(lat float64, degree float64) string {
+func getLat2Coordinates(lat, degree float64) string {
 	northSouth := 'S'
 	if lat >= 0 {
 		northSouth = 'N'
@@ -387,7 +387,7 @@ func getLat2Coordinates(lat float64, degree float64) string {
 	return fmt.Sprintf("%s%02.0f", string(northSouth), latPart)
 }
 
-func getLon2Coordinates(lon float64, degree float64) string {
+func getLon2Coordinates(lon, degree float64) string {
 	eastWest := 'W'
 	if lon >= 0 {
 		eastWest = 'E'

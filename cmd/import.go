@@ -42,7 +42,7 @@ func init() {
 	importCmd.Flags().StringVar(&archiveFormat, "archiveformat", "", "archive format for the tracks")
 }
 
-func customFormat(format string, t time.Time, address geo.Address, degree1 string, degree5 string, original string, kind string, creator string, quality float64) string {
+func customFormat(format string, t time.Time, address geo.Address, degree1, degree5, original, kind, creator string, quality float64) string {
 	result := format
 	result = strings.ReplaceAll(result, "{year}", fmt.Sprintf("%d", t.Year()))
 	result = strings.ReplaceAll(result, "{month}", fmt.Sprintf("%02d", t.Month()))
@@ -98,7 +98,7 @@ func isQuality() bool {
 	return a || d
 }
 
-func appendTrack(filename string, t time.Time, address geo.Address, gpx []ImportStructure, degree1 string, degree5 string, creator string, quality float64) []ImportStructure {
+func appendTrack(filename string, t time.Time, address geo.Address, gpx []ImportStructure, degree1, degree5, creator string, quality float64) []ImportStructure {
 	file := filepath.Base(filename)
 	extension := filepath.Ext(file)
 	name := file[:len(file)-len(extension)]
@@ -196,11 +196,6 @@ func importExecute() {
 	lib.Pass("Moving tracks...")
 
 	for _, element := range importGPX {
-		g, err := readTrack(element.source)
-		if err != nil {
-			continue
-		}
-
 		target := destination + "/" + element.directory + "/" + element.archive + ".gpx"
 		fmt.Printf("[%v] -> %v\n", element.source, target)
 
@@ -211,7 +206,7 @@ func importExecute() {
 				os.Exit(1)
 			}
 
-			writeGPX(g, target)
+			lib.CopyFile(element.source, target)
 		}
 	}
 }

@@ -4,10 +4,9 @@ import (
 	"os"
 	"testing"
 
+	trackmaster "github.com/inode64/gotrackmaster/trackmaster"
 	"github.com/stretchr/testify/assert"
 	gpx "github.com/twpayne/go-gpx"
-
-	trackmaster "github.com/inode64/gotrackmaster/trackmaster"
 )
 
 // testSpeedFix tests the speed fix algorithm.

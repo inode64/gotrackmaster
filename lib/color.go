@@ -1,9 +1,8 @@
 package lib
 
 import (
-	"fmt"
-
 	"github.com/fatih/color"
+	"github.com/sirupsen/logrus"
 )
 
 var (
@@ -14,23 +13,23 @@ var (
 )
 
 func Error(s string) {
-	fmt.Println(Colorize(s, color.FgRed))
+	logrus.Error(Colorize(s, color.FgRed))
 }
 
 func Warning(s string) {
-	fmt.Println(Colorize(s, color.FgRed))
+	logrus.Warn(Colorize(s, color.FgRed))
 }
 
 func Notice(s string) {
-	fmt.Println(Colorize(s, color.FgYellow))
+	logrus.Info(Colorize(s, color.FgYellow))
 }
 
 func Info(s string) {
-	fmt.Println(Colorize(s, color.FgGreen))
+	logrus.Info(Colorize(s, color.FgGreen))
 }
 
 func Pass(s string) {
-	fmt.Println(Colorize(s, color.FgBlue))
+	logrus.Info(Colorize(s, color.FgBlue))
 }
 
 func Colorize(s string, c color.Attribute) string {

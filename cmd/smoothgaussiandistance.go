@@ -16,8 +16,10 @@ var smoothGaussianDistanceCmd = &cobra.Command{
 	},
 }
 
-var windowSize int
-var sigma float64
+var (
+	windowSize int
+	sigma      float64
+)
 
 func init() {
 	rootCmd.AddCommand(smoothGaussianDistanceCmd)
