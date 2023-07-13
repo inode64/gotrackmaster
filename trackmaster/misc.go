@@ -238,6 +238,7 @@ func ClassificationTrack(filename string) string {
 		"Flat speed":                         speedFlat,
 		"Average speed":                      speedTotal,
 		"Classification":                     c,
+		"Total points":                       total,
 	}).Debug("Classification result")
 
 	return c

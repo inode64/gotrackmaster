@@ -12,11 +12,8 @@ require (
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.7.0
 	github.com/stretchr/testify v1.8.1
-	github.com/twpayne/go-gpx v1.3.0
-	go.mongodb.org/mongo-driver v1.12.0
+	github.com/twpayne/go-gpx v1.3.1-0.20230712125754-5c1567af6ce8
 )
-
-replace github.com/twpayne/go-gpx => /home/fran/projectos/go-gpx
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
@@ -34,7 +31,8 @@ require (
 	github.com/tidwall/rtree v1.10.0 // indirect
 	github.com/twpayne/go-geom v1.5.2 // indirect
 	github.com/twpayne/go-polyline v1.1.1 // indirect
-	golang.org/x/exp v0.0.0-20230626212559-97b1e661b5df // indirect
+	go.mongodb.org/mongo-driver v1.12.0 // indirect
+	golang.org/x/exp v0.0.0-20230711153332-06a737ee72cb // indirect
 	golang.org/x/net v0.12.0 // indirect
 	golang.org/x/sys v0.10.0 // indirect
 	golang.org/x/text v0.11.0 // indirect
